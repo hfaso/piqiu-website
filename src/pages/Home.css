@@ -1,0 +1,239 @@
+/* Home.css - 三维引擎案例网站主样式表 */
+
+/* 1. 根元素与CSS变量定义
+ * 定义一系列可重用的设计令牌，方便整体主题控制和维护。
+ */
+:root {
+  /* 主色彩体系 */
+  --color-primary: #6495ed; /* 矢车菊蓝 */
+  --color-primary-dark: #4169e1; /* 皇室蓝 */
+  --color-background: #0f0f23; /* 主背景色 */
+  --color-background-alt: #1a1a2e; /* 辅助背景色 */
+  --color-text: #ffffff; /* 主文本色 */
+  --color-text-secondary: #cccccc; /* 次级文本色 */
+  --color-accent: #00ffff; /* 点缀色 */
+
+  /* 间距体系 */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+
+  /* 边框圆角 */
+  --border-radius: 8px;
+  --border-radius-lg: 15px;
+
+  /* 阴影 */
+  --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* 2. 基础元素样式重置与设置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, var(--color-background) 0%, var(--color-background-alt) 100%);
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* 3. 布局容器样式
+ * 为首页和案例页提供主要的布局结构。
+ */
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-hero {
+  text-align: center;
+  padding: var(--spacing-xl) var(--spacing-md);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.home-title {
+  font-size: clamp(2.5rem, 5vw, 4rem); /* 使用clamp实现响应式字体 */
+  margin-bottom: var(--spacing-md);
+  background: linear-gradient(45deg, var(--color-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.home-subtitle {
+  font-size: 1.2rem;
+  color: var(--color-text-secondary);
+  max-width: 600px;
+  margin: 0 auto var(--spacing-lg);
+}
+
+/* 4. 案例网格布局
+ * 用于展示不同案例的卡片网格。
+ */
+.case-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.case-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.case-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-medium);
+  border-color: var(--color-primary);
+}
+
+.case-card h3 {
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+}
+
+.case-card h3 .icon {
+  margin-right: var(--spacing-xs);
+}
+
+.case-card p {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+/* 5. 三维画布容器
+ * 专门为Three.js画布设计的全屏容器。
+ */
+.canvas-container {
+  width: 100%;
+  height: 100vh; /* 确保画布占满整个视口 */
+  position: relative;
+  background: transparent; /* 画布背景通常在JS中设置 */
+}
+
+.canvas-container canvas {
+  display: block;
+  outline: none;
+}
+
+/* 6. 案例内容区域
+ * 用于放置案例描述和控制UI的包装容器。
+ */
+.case-content {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-md) auto;
+  max-width: 800px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.case-description {
+  line-height: 1.7;
+  margin-bottom: var(--spacing-md);
+}
+
+.tech-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin: var(--spacing-sm) 0;
+}
+
+.tech-tag {
+  background: rgba(100, 149, 237, 0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  border: 1px solid rgba(100, 149, 237, 0.3);
+}
+
+/* 7. 导航链接样式
+ * 用于页面内导航的链接样式。
+ */
+.nav-links {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: var(--spacing-lg);
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 24px;
+  background: rgba(100, 149, 237, 0.1);
+  color: var(--color-primary);
+  text-decoration: none;
+  border-radius: 25px;
+  border: 1px solid rgba(100, 149, 237, 0.3);
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background: rgba(100, 149, 237, 0.2);
+  transform: translateY(-2px);
+}
+
+/* 8. 工具类 */
+.text-center { text-align: center; }
+.mt-md { margin-top: var(--spacing-md); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.full-width { width: 100%; }
+
+/* 9. 响应式设计
+ * 针对不同屏幕尺寸的样式调整。
+ */
+@media (max-width: 768px) {
+  .case-grid {
+    grid-template-columns: 1fr; /* 小屏幕上单列布局 */
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+
+  .case-content {
+    padding: var(--spacing-md);
+    margin: var(--spacing-sm);
+  }
+
+  .nav-links {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .home-hero {
+    padding: var(--spacing-lg) var(--spacing-sm);
+  }
+}
+
+/* 10. 动画效果 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
