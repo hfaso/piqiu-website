@@ -12,8 +12,11 @@
   "dependencies": {
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.6",
-    "yarn": "^1.22.22"
+    "remark-gfm": "^4.0.1",
+    "yarn": "^1.22.22",
+    "gl-matrix": "3.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
