@@ -7,41 +7,6 @@ export default function CanvasContainer() {
   let scene: any;
 
   useEffect(() => {
-    const vs = `
-            attribute vec3 aVertex;
-            attribute vec3 aNormal;
-            varying vec3 vNormal;
-            uniform mat4 uModelViewProjectionMatrix;
-            uniform mat3 uNormalMatrix;
-
-            void main(void) {
-                vec4 position = vec4(aVertex, 1.0);
-
-                position = uModelViewProjectionMatrix * position;
-                vNormal = vec3(uNormalMatrix * aNormal);
-                gl_Position = position;
-            }
-        `;
-    const fs = `
-            precision mediump float;
-            varying vec3 vNormal;
-            uniform vec4 uColor;
-
-            void main(void) {
-                vec4 color = vec4(1.0);
-
-                color = uColor;
-
-                vec3 normal = normalize(vNormal);
-                float nDotV = abs(normal.z);
-                float lightIntensity = float(0.3) +
-                                    nDotV * float(0.7) +
-                                    float(0.4) * pow(nDotV, float(200));
-                color = vec4(color.xyz * lightIntensity, 1.0);
-                gl_FragColor = color;
-            }
-        `;
-
     let cubeGeo = new piqiu3d.CubeGeo(0.5, 1, 2);
     const vbo0 = new piqiu3d.VBO('aVertex', 3, cubeGeo.vertices);
     const vbo1 = new piqiu3d.VBO('aNormal', 3, cubeGeo.normals);
@@ -54,10 +19,7 @@ export default function CanvasContainer() {
     geo.push(ibo);
     geo.push(drawer);
 
-    const eff = new piqiu3d.Effect();
-    eff.push(new piqiu3d.VertexShader(vs));
-    eff.push(new piqiu3d.FragmentShader(fs));
-    eff.push(new piqiu3d.Uniform('uColor', new Float32Array([0.3, 0.51, 1.0, 1.0])));
+    const eff = piqiu3d.ShaderRegistry.createLightColor().generate();
 
     let mat4Transform = mat4.create();
     mat4.fromTranslation(mat4Transform, vec3.fromValues(0, 0, 0));
@@ -152,11 +114,8 @@ export default function CanvasContainer() {
       vec3.fromValues(-0.1, -2, -0.1),
       vec3.fromValues(0.1, 2, 0.1),
     );
-    // resetTool.lookFrom('x', boundingBox);
-    // resetTool.lookFrom('y', boundingBox);
-    // resetTool.lookFrom('z', boundingBox);
+
     resetTool.home(boundingBox);
-    // resetTool.fit(boundingBox);
 
     window.addEventListener('resize', () => {
       canvas.width = window.innerWidth / 2;
