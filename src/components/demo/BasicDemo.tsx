@@ -1,12 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 // import styles from './index.less';
 import * as piqiu3d from '@piqiu/piqiu3d'
 import { vec2, vec3, mat4 } from 'gl-matrix';
+import { useMouseHandler } from './handler/MouseHandler';
 
 export default function CanvasContainer() {
-  let scene: any;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const sceneRef = useRef<any>(null);
+  const mouseHandlerRef = useRef<any>(null);
 
   useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+
+    canvas.width = window.innerWidth * 0.5;
+    canvas.height = window.innerHeight * 0.5;
+    const context = canvas.getContext('webgl2', {
+      stencil: false,
+    }) as WebGLRenderingContext;
+    const renderContext = new piqiu3d.RenderContext(context, []);
+
     let cubeGeo = new piqiu3d.CubeGeo(0.5, 1, 2);
     const vbo0 = new piqiu3d.VBO('aVertex', 3, cubeGeo.vertices);
     const vbo1 = new piqiu3d.VBO('aNormal', 3, cubeGeo.normals);
@@ -40,72 +54,44 @@ export default function CanvasContainer() {
     model.add(part);
     model.update();
 
-    const canvas = document.getElementById('demo') as HTMLCanvasElement;
-    canvas.width = window.innerWidth * 0.5;
-    canvas.height = window.innerHeight * 0.5;
-    const context = canvas.getContext('webgl', {
-      stencil: false,
-    }) as WebGLRenderingContext;
-    const renderContext = new piqiu3d.RenderContext(context, []);
-
     const builtinUniforms = renderPass.camera.builtInUniforms;
     let mat4Translate = mat4.create();
     mat4.translate(mat4Translate, mat4Translate, vec3.fromValues(3, 3, 0));
     builtinUniforms.modelMatrix = mat4Translate;
     builtinUniforms.update();
 
-    scene = new piqiu3d.Scene(renderContext);
-    scene.push(renderPass);
-    scene.size = [canvas.width, canvas.height];
+    sceneRef.current = new piqiu3d.Scene(renderContext);
+    sceneRef.current.push(renderPass);
+    sceneRef.current.size = [canvas.width, canvas.height];
 
-    const mouseHandler = new MouseHandler(builtinUniforms);
-    mouseHandler.render = (): void => {
-      scene.render();
-    };
 
+    // 使用封装的MouseHandler
     const dpr = 1;
-    canvas.addEventListener(
-      'mousedown',
-      (event: MouseEvent): void => {
-        const pos = vec2.fromValues(event.offsetX * dpr, event.offsetY * dpr);
-        switch (event.button) {
-          case 0:
-            mouseHandler.begin('orbit', pos);
-            break;
-          case 2:
-            mouseHandler.begin('pan', pos);
-            break;
+    const mouseHandler = useMouseHandler({
+      builtInUniforms: builtinUniforms,
+      onRender: () => {
+        if (sceneRef.current) {
+          sceneRef.current.render();
         }
       },
-      false,
-    );
-    canvas.addEventListener(
-      'mousemove',
-      (event: MouseEvent): void => {
-        const pos = vec2.fromValues(event.offsetX * dpr, event.offsetY * dpr);
-        mouseHandler.move(pos);
-      },
-      false,
-    );
-    canvas.addEventListener(
-      'mouseup',
-      (event: MouseEvent): void => {
-        const pos = vec2.fromValues(event.offsetX * dpr, event.offsetY * dpr);
-        mouseHandler.end(pos);
-      },
-      false,
-    );
+      dpr: 1
+    });
+
+    mouseHandler.bindEvents(canvas);
+    mouseHandlerRef.current = mouseHandler;
+
     canvas.addEventListener(
       'wheel',
       (event: WheelEvent): void => {
         const action = new piqiu3d.WheelZoomTool(builtinUniforms);
         const current = vec2.fromValues(event.offsetX * dpr, event.offsetY * dpr);
         action.update(current, event.deltaY < 0 ? 1.1 : 1 / 1.1);
-        scene.render();
+        sceneRef.current.render();
       },
       false,
     );
-    window.oncontextmenu = (event) => {
+    // 阻止右键菜单
+    canvas.oncontextmenu = (event) => {
       event.preventDefault();
     };
 
@@ -121,16 +107,23 @@ export default function CanvasContainer() {
       canvas.width = window.innerWidth / 2;
       canvas.height = window.innerHeight / 2;
 
-      scene.size = [canvas.width, canvas.height];
-      scene.render();
+      sceneRef.current.size = [canvas.width, canvas.height];
+      sceneRef.current.render();
     });
 
-    scene.render();
+    sceneRef.current.render();
+    
+    return () => {
+      if (mouseHandlerRef.current) {
+        mouseHandlerRef.current.destroy(canvas);
+      }
+    };
   }, []);
 
   return (
     <div>
       <canvas
+        ref={canvasRef}
         id="demo"
         style={{
           background: 'red',
@@ -138,48 +131,4 @@ export default function CanvasContainer() {
       ></canvas>
     </div>
   );
-}
-
-export class MouseHandler {
-  protected m_buildInUniforms: piqiu3d.BuiltInUniforms;
-  private m_action: piqiu3d.PanTool | piqiu3d.OrbitTool | undefined;
-  protected m_type: string = 'none';
-
-  constructor(buildInUniforms: piqiu3d.BuiltInUniforms) {
-    this.m_buildInUniforms = buildInUniforms;
-  }
-
-  render(): void {}
-
-  begin(type: string, current: vec2): void {
-    switch (type) {
-      case 'pan':
-        this.m_action = new piqiu3d.PanTool(this.m_buildInUniforms, current);
-        this.m_type = type;
-        break;
-      case 'orbit':
-        this.m_action = new piqiu3d.OrbitTool(this.m_buildInUniforms, current);
-        this.m_type = type;
-        break;
-    }
-
-    if (type === 'pan' || type === 'orbit') {
-      this.render();
-    }
-  }
-
-  move(current: vec2): void {
-    if (this.m_action) {
-      this.m_action.update(current);
-      this.render();
-    }
-  }
-
-  end(current: vec2): void {
-    if (this.m_action) {
-      this.m_action = undefined;
-      this.m_type = 'none';
-      this.render();
-    }
-  }
 }
