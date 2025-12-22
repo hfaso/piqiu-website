@@ -63,6 +63,13 @@ export class Piqiu3DRenderer {
         this.model.update();
     }
 
+    // 添加通用事件监听器
+    addGeneralEventListener() {
+        this.addMouseEventListener();
+        this.addMouseWheelEventListener();
+        this.addWindowResizeListener();
+    }
+
     addMouseEventListener() {
         this.mouseHandler.bindEvents(this.canvas);
     }
@@ -78,6 +85,16 @@ export class Piqiu3DRenderer {
             },
             false,
         );
+    }
+
+    addWindowResizeListener() {
+        window.addEventListener('resize', () => {
+            this.canvas.width = window.innerWidth / 2;
+            this.canvas.height = window.innerHeight / 2;
+
+            this.scene.size = [this.canvas.width, this.canvas.height];
+            this.scene.render();
+        });
     }
 
     // 更新相机位置以适应当前场景

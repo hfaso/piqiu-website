@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 // import styles from './index.less';
 import * as piqiu3d from '@piqiu/piqiu3d'
-import { Piqiu3DRenderer } from './module/Piqiu3DRenderer';
+import { Piqiu3DRenderer } from './piQiuModule/Piqiu3DRenderer';
 
 export default function CanvasContainer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -21,18 +21,9 @@ export default function CanvasContainer() {
 
     piqiuRenderer.addPart(cubePart);
 
-    piqiuRenderer.addMouseEventListener();
-    piqiuRenderer.addMouseWheelEventListener();
+    piqiuRenderer.addGeneralEventListener();
 
     piqiuRenderer.updateCamera();
-
-    window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth / 2;
-      canvas.height = window.innerHeight / 2;
-
-      sceneRef.current.size = [canvas.width, canvas.height];
-      sceneRef.current.render();
-    });
   }, []);
 
   return (
