@@ -1,0 +1,31 @@
+.basics-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.basics-title {
+  color: #6495ed; /* 使用与网站主题一致的颜色 */
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* 三维画布容器样式 - 确保画布占满整个视口 */
+.canvas-container {
+  width: 100%;
+  height: 80vh; /* 视口高度的80%，给标题和说明留出空间 */
+  background: #f0f0f0; /* 画布加载前的背景色 */
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 20px auto;
+}
+
+/* 案例描述区域的样式 */
+.case-description {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

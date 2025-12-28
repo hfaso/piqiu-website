@@ -4,7 +4,7 @@ import { vec2, vec3 } from 'gl-matrix';
 
 export class Piqiu3DRenderer {
     private canvas: HTMLCanvasElement;
-    private renderContext: piqiu3d.RenderContext;
+    public renderContext: piqiu3d.RenderContext;
     private renderPass: piqiu3d.RenderPass;
     public scene: piqiu3d.Scene;
     public mouseHandler: any;

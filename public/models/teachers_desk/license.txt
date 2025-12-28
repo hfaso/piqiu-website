@@ -1,0 +1,11 @@
+Model Information:
+* title:	Teacher's Desk
+* source:	https://sketchfab.com/3d-models/teachers-desk-82aecd09a76e46149dabdcb20d7e3ff6
+* author:	StaticBuffering (https://sketchfab.com/StaticBuffering)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Teacher's Desk" (https://sketchfab.com/3d-models/teachers-desk-82aecd09a76e46149dabdcb20d7e3ff6) by StaticBuffering (https://sketchfab.com/StaticBuffering) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

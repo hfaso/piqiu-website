@@ -10,8 +10,7 @@ function Header() {
   const navigationItems = [
     { path: '/', label: '首页', icon: '🏠' },
     { path: '/basics', label: '基础案例', icon: '⭐' },
-    { path: '/geometry', label: '几何体', icon: '🔷' },
-    { path: '/animation', label: '动画效果', icon: '✨' },
+    { path: '/loaderModel', label: '加载模型', icon: '⭐' },
     { path: '/gallery', label: '案例画廊', icon: '🎨' },
     { path: '/interaction', label: '交互案例', icon: '👆' },
   ];
