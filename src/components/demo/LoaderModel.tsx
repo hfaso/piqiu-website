@@ -22,22 +22,12 @@ export default function CanvasContainer() {
     }, []);
 
     async function LoaderModel(piqiuRenderer: Piqiu3DRenderer) {
-        const GLTFParser = new piqiu3d.GLTFParser(piqiuRenderer.renderContext)
-        try {
-            // 替换为你的GLTF文件路径（建议使用glTF 2.0格式的模型，如Box.gltf）
-            // await GLTFParser.load('/models/sample.gltf');
-            await GLTFParser.load('/models/teachers_desk/scene.gltf');
-        } catch (e) {
-            console.error('GLTF加载失败:', e);
-            return;
-        }
+        const loader = new piqiu3d.GLTFLoader();
+        debugger;
+        const meshes = await loader.load(piqiuRenderer.renderContext, '/models/teachers_desk.glb');
 
-        const meshIndices = GLTFParser.getDefaultSceneMeshIndices();
-        for (const meshIdx of meshIndices) {
-            const primitives = GLTFParser.buildMesh(meshIdx);
-            for (const primitive of primitives) {
-                const positionAttr = primitive.attributes.POSITION;
-            }
+        for (const mesh of meshes) {
+            mesh.draw(piqiuRenderer.renderContext);
         }
 
         piqiuRenderer.addPart(loaderPart);
