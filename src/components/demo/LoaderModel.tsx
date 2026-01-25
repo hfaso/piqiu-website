@@ -31,8 +31,8 @@ export default function CanvasContainer() {
     debugger;
     const meshes = await loader.load(
       piqiuRenderer.renderContext,
-      //   "/models/teachers_desk.glb",
-      "/models/sample.gltf",
+      // "/models/teachers_desk.glb",
+      "/models/simple_cube.glb",
     );
 
     for (const mesh of meshes) {
