@@ -106,10 +106,8 @@ export class Piqiu3DRenderer {
   // 更新相机位置以适应当前场景
   updateCamera() {
     const resetTool = new piqiu3d.ResetTool(this.builtInUniforms);
-    const boundingBox = new piqiu3d.BoundingBox(
-      vec3.fromValues(-0.1, -2, -0.1),
-      vec3.fromValues(0.1, 2, 0.1),
-    );
+
+    const boundingBox = this.model.boundingBox;
 
     resetTool.home(boundingBox);
 

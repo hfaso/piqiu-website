@@ -22,8 +22,6 @@ export default function CanvasContainer() {
 
     debugger;
     LoaderModel(piqiuRenderer);
-
-    piqiuRenderer.updateCamera();
   }, []);
 
   async function LoaderModel(piqiuRenderer: Piqiu3DRenderer) {
@@ -31,8 +29,8 @@ export default function CanvasContainer() {
     debugger;
     const meshes = await loader.load(
       piqiuRenderer.renderContext,
-      // "/models/teachers_desk.glb",
-      "/models/simple_cube.glb",
+      "/models/teachers_desk.glb",
+      // "/models/simple_cube.glb",
     );
 
     for (const mesh of meshes) {
