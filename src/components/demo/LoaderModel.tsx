@@ -20,17 +20,15 @@ export default function CanvasContainer() {
     });
     sceneRef.current = piqiuRenderer.scene;
 
-    debugger;
     LoaderModel(piqiuRenderer);
   }, []);
 
   async function LoaderModel(piqiuRenderer: Piqiu3DRenderer) {
     const loader = new piqiu3d.GLTFLoader();
-    debugger;
     const meshes = await loader.load(
       piqiuRenderer.renderContext,
-      "/models/teachers_desk.glb",
-      // "/models/simple_cube.glb",
+      // "/models/teachers_desk.glb",
+      "/models/bird.glb",
     );
 
     for (const mesh of meshes) {
