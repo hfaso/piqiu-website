@@ -107,6 +107,7 @@ export class Piqiu3DRenderer {
   updateCamera() {
     const resetTool = new piqiu3d.ResetTool(this.builtInUniforms);
 
+    debugger;
     const boundingBox = this.model.boundingBox;
 
     resetTool.home(boundingBox);
