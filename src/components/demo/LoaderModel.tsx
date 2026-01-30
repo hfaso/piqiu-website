@@ -84,7 +84,6 @@ export default function CanvasContainer({ source }: Props) {
 
       const meshes = await loader.load(piqiuRenderer.renderContext, src);
       if (version !== loadVersionRef.current) return;
-      debugger;
       for (const mesh of meshes) {
         piqiuRenderer.addPart(mesh);
       }
