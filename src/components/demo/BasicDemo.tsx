@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 // import styles from './index.less';
 import * as piqiu3d from '@piqiu/piqiu3d'
 import { Piqiu3DRenderer } from './piQiuModule/Piqiu3DRenderer';

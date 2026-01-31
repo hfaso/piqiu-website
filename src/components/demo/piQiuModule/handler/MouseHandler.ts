@@ -1,5 +1,5 @@
 import * as piqiu3d from '@piqiu/piqiu3d'
-import { vec2, vec3, mat4 } from 'gl-matrix';
+import { vec2 } from 'gl-matrix';
 
 export interface MouseHandlerProps {
   builtInUniforms: piqiu3d.BuiltInUniforms;
@@ -52,9 +52,9 @@ export class MouseHandler {
     this.move(pos);
   }
 
-  private handleMouseUp(event: MouseEvent): void {
-    const pos = vec2.fromValues(event.offsetX * this.dpr, event.offsetY * this.dpr);
-    this.end(pos);
+  private handleMouseUp(): void {
+    // const pos = vec2.fromValues(event.offsetX * this.dpr, event.offsetY * this.dpr);
+    this.end();
   }
 
   begin(type: string, current: vec2): void {
@@ -81,7 +81,7 @@ export class MouseHandler {
     }
   }
 
-  end(current: vec2): void {
+  end(): void {
     if (this.m_action) {
       this.m_action = undefined;
       this.m_type = 'none';
