@@ -1,7 +1,7 @@
 {
   "name": "piqiu-website",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,7 +16,8 @@
     "react-router-dom": "^7.9.6",
     "remark-gfm": "^4.0.1",
     "yarn": "^1.22.22",
-    "gl-matrix": "3.4.3"
+    "gl-matrix": "3.4.3",
+    "piqiu3d": "git+ssh://git@github.com:hfaso/piqiu3d.git#v0.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
