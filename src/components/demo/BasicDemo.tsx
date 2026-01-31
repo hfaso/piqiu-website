@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-// import styles from './index.less';
-import * as piqiu3d from '@piqiu/piqiu3d'
-import { Piqiu3DRenderer } from './piQiuModule/Piqiu3DRenderer';
+import { useEffect, useRef } from "react";
+// import * as piqiu3d from '@piqiu/piqiu3d'
+import * as piqiu3d from "piqiu3d";
+import { Piqiu3DRenderer } from "./piQiuModule/Piqiu3DRenderer";
 
 export default function CanvasContainer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -14,7 +14,10 @@ export default function CanvasContainer() {
     canvas.width = window.innerWidth * 0.5;
     canvas.height = window.innerHeight * 0.5;
 
-    const piqiuRenderer = new Piqiu3DRenderer(canvas, { width: canvas.width, height: canvas.height });
+    const piqiuRenderer = new Piqiu3DRenderer(canvas, {
+      width: canvas.width,
+      height: canvas.height,
+    });
     sceneRef.current = piqiuRenderer.scene;
 
     const cubePart = new piqiu3d.CubePart(1, 1, 1);
@@ -28,10 +31,7 @@ export default function CanvasContainer() {
 
   return (
     <div>
-      <canvas
-        ref={canvasRef}
-        id="demo"
-      ></canvas>
+      <canvas ref={canvasRef} id="demo"></canvas>
     </div>
   );
 }
