@@ -57,7 +57,7 @@ export default function CanvasContainer({ source }: Props) {
     }
 
     if (!source) {
-      src = "/models/bird.glb"; // 默认模型
+      src = `${import.meta.env.BASE_URL}models/bird.glb`;
     } else if (typeof source === "string") {
       src = source;
     } else {
