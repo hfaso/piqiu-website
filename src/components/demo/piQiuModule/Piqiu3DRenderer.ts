@@ -1,4 +1,3 @@
-// import * as piqiu3d from "@piqiu/piqiu3d";
 import * as piqiu3d from "piqiu3d";
 import { useMouseHandler } from "./handler/MouseHandler";
 import { vec2 } from "gl-matrix";

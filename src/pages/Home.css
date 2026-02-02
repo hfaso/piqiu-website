@@ -237,3 +237,79 @@ body {
 .fade-in {
   animation: fadeIn 0.6s ease-out;
 }
+
+/* ===== Home 主体左右分栏 ===== */
+.home-main {
+  max-width: 1200px;
+  margin: var(--spacing-xl) auto;
+  padding: 0 var(--spacing-lg);
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: var(--spacing-xl);
+}
+
+.home-main-left h2,
+.home-main-right h2 {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-primary);
+}
+
+.home-main-left p {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+.feature-list {
+  margin-top: var(--spacing-sm);
+  padding-left: 1.2em;
+}
+
+.feature-list li {
+  margin-bottom: 6px;
+  color: var(--color-text-secondary);
+}
+
+/* ===== 案例合集 ===== */
+.case-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.case-item a {
+  display: block;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.case-item a:hover {
+  background: rgba(100, 149, 237, 0.08);
+  transform: translateX(4px);
+}
+
+.case-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.case-name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.case-desc {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 900px) {
+  .home-main {
+    grid-template-columns: 1fr;
+  }
+}

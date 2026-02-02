@@ -12,7 +12,6 @@ function Header() {
     { path: '/basics', label: '基础案例', icon: '⭐' },
     { path: '/loaderModel', label: '加载模型', icon: '⭐' },
     { path: '/gallery', label: '案例画廊', icon: '🎨' },
-    { path: '/interaction', label: '交互案例', icon: '👆' },
   ];
 
   const isActiveLink = (path: string) => {
