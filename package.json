@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "gl-matrix": "3.4.3",
-    "piqiu3d": "git+ssh://git@github.com/hfaso/piqiu3d.git#v0.1.1",
+    "piqiu3d": "git+ssh://git@github.com/hfaso/piqiu3d.git#v0.1.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
