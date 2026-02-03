@@ -1,38 +1,48 @@
-// App.tsx (更新版)
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {
+  HashRouter,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import Layout from './components/layout/Layout';
 
-// 使用懒加载引入页面组件
 const Home = lazy(() => import('./pages/Home'));
 const Basics = lazy(() => import('./pages/Basics'));
 const LoaderModel = lazy(() => import('./pages/LoaderModel'));
 const Gallery = lazy(() => import('./pages/Gallery'));
-// 导入其他页面组件...
 
 function App() {
   const { t } = useTranslation();
+
   return (
-    <Router>
+    <HashRouter>
       <Layout>
-        <Suspense fallback={
-          <div className="loading-fallback">
-            <div className="spinner"></div>
-            <p>{t('app.loading3d')}</p>
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="loading-fallback">
+              <div className="spinner"></div>
+              <p>{t('app.loading3d')}</p>
+            </div>
+          }
+        >
           <Routes>
-            <Route path="/" element={<Home />} />
+            {/* 根路径重定向 */}
+            <Route path="/" element={<Navigate to="/home" replace />} />
+
+            {/* 正常页面路由 */}
+            <Route path="/home" element={<Home />} />
             <Route path="/basics" element={<Basics />} />
             <Route path="/loaderModel" element={<LoaderModel />} />
             <Route path="/gallery" element={<Gallery />} />
-            {/* 其他路由 */}
+
+            {/* 兜底 */}
             <Route path="*" element={<div>{t('app.notFound')}</div>} />
           </Routes>
         </Suspense>
       </Layout>
-    </Router>
+    </HashRouter>
   );
 }
 
