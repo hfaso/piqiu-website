@@ -7,6 +7,8 @@ interface CaseItem {
   desc: string;
   tags: string[];
   route: string;
+  /** 缩略图 URL，不填则显示占位图 */
+  thumbnail?: string;
 }
 
 const CASES: CaseItem[] = [
@@ -15,7 +17,7 @@ const CASES: CaseItem[] = [
     title: '基础几何体',
     desc: '立方体、球体、圆柱等基础几何体渲染示例',
     tags: ['Geometry', 'WebGL'],
-    route: '/basics'
+    route: '/basics',
   },
   {
     id: 'gltf',
@@ -55,6 +57,16 @@ export default function Gallery() {
       <section className="case-grid">
         {CASES.map(item => (
           <div key={item.id} className="case-card">
+            <div className="case-card-thumbnail">
+              {item.thumbnail ? (
+                <img src={item.thumbnail} alt={item.title} loading="lazy" />
+              ) : (
+                <div className="case-card-thumbnail-placeholder" aria-hidden>
+                  <span className="thumbnail-icon">🧩</span>
+                  <span className="thumbnail-text">{item.title}</span>
+                </div>
+              )}
+            </div>
             <h3>
               <span className="icon">🧩</span>
               {item.title}

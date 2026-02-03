@@ -1,9 +1,142 @@
+/* Gallery 页面变量回退（直接访问时未加载 Home.css） */
+.gallery-container {
+  --g-spacing-xs: var(--spacing-xs, 0.5rem);
+  --g-spacing-sm: var(--spacing-sm, 1rem);
+  --g-spacing-md: var(--spacing-md, 1.5rem);
+  --g-spacing-lg: var(--spacing-lg, 2rem);
+  --g-spacing-xl: var(--spacing-xl, 3rem);
+  --g-radius: var(--border-radius-lg, 15px);
+  --g-primary: var(--color-primary, #6495ed);
+  --g-shadow: var(--shadow-medium, 0 4px 20px rgba(0, 0, 0, 0.2));
+}
+
 .gallery-container {
   min-height: 100vh;
-  padding-bottom: var(--spacing-xl);
+  padding-bottom: var(--g-spacing-xl);
 }
 
 .gallery-header {
   text-align: center;
-  padding: var(--spacing-xl) var(--spacing-md);
+  padding: var(--g-spacing-xl) var(--g-spacing-md);
+}
+
+/* 案例网格（与 Home 一致，便于直接访问 /gallery） */
+.gallery-container .case-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--g-spacing-lg);
+  padding: var(--g-spacing-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gallery-container .case-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: var(--g-radius);
+  padding: var(--g-spacing-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.gallery-container .case-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--g-shadow);
+  border-color: var(--g-primary);
+}
+
+.gallery-container .case-card h3 {
+  color: var(--g-primary);
+  margin-bottom: var(--g-spacing-sm);
+  display: flex;
+  align-items: center;
+}
+
+.gallery-container .case-card h3 .icon {
+  margin-right: var(--g-spacing-xs);
+}
+
+.gallery-container .case-card p {
+  color: var(--color-text-secondary, #ccc);
+  font-size: 0.9rem;
+}
+
+.gallery-container .tech-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--g-spacing-xs);
+  margin: var(--g-spacing-sm) 0;
+}
+
+.gallery-container .tech-tag {
+  background: rgba(100, 149, 237, 0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  border: 1px solid rgba(100, 149, 237, 0.3);
+}
+
+.gallery-container .nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 24px;
+  background: rgba(100, 149, 237, 0.1);
+  color: var(--g-primary);
+  text-decoration: none;
+  border-radius: 25px;
+  border: 1px solid rgba(100, 149, 237, 0.3);
+  transition: all 0.3s ease;
+  margin-top: var(--g-spacing-md);
+}
+
+.gallery-container .nav-link:hover {
+  background: rgba(100, 149, 237, 0.2);
+  transform: translateY(-2px);
+}
+
+/* 案例卡片缩略图（左右居中） */
+.case-card-thumbnail {
+  width: 92%;
+  max-width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0 auto var(--g-spacing-md);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.case-card-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  margin: 0 auto;
+}
+
+.case-card-thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--g-spacing-sm);
+  background: linear-gradient(145deg, rgba(100, 149, 237, 0.15) 0%, rgba(30, 30, 50, 0.4) 100%);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.case-card-thumbnail-placeholder .thumbnail-icon {
+  font-size: 2.5rem;
+  opacity: 0.9;
+}
+
+.case-card-thumbnail-placeholder .thumbnail-text {
+  font-size: 0.85rem;
+  max-width: 90%;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
