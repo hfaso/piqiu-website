@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import './Gallery.css';
 
 interface CaseItem {
@@ -11,45 +12,46 @@ interface CaseItem {
   thumbnail?: string;
 }
 
-const CASES: CaseItem[] = [
-  {
-    id: 'basics',
-    title: '基础几何体',
-    desc: '立方体、球体、圆柱等基础几何体渲染示例',
-    tags: ['Geometry', 'WebGL'],
-    route: '/basics',
-  },
-  {
-    id: 'gltf',
-    title: 'GLTF 模型加载',
-    desc: '支持 GLTF / GLB 模型解析与高效渲染',
-    tags: ['GLTF', 'Loader'],
-    route: '/gallery'
-  },
-  {
-    id: 'postprocess',
-    title: '后处理效果',
-    desc: '等值线、裁剪、包裹等后处理算法示例',
-    tags: ['PostProcess', 'FBO'],
-    route: '/gallery'
-  },
-  {
-    id: 'webgpu',
-    title: 'WebGPU 实验',
-    desc: '基于 WebGPU 的新一代渲染管线探索',
-    tags: ['WebGPU', 'Experimental'],
-    route: '/gallery'
-  }
-];
-
 export default function Gallery() {
+  const { t } = useTranslation();
+  const CASES: CaseItem[] = [
+    {
+      id: 'basics',
+      title: t('gallery.cases.basics.title'),
+      desc: t('gallery.cases.basics.desc'),
+      tags: ['Geometry', 'WebGL'],
+      route: '/basics',
+    },
+    {
+      id: 'gltf',
+      title: t('gallery.cases.gltf.title'),
+      desc: t('gallery.cases.gltf.desc'),
+      tags: ['GLTF', 'Loader'],
+      route: '/gallery'
+    },
+    {
+      id: 'postprocess',
+      title: t('gallery.cases.postprocess.title'),
+      desc: t('gallery.cases.postprocess.desc'),
+      tags: ['PostProcess', 'FBO'],
+      route: '/gallery'
+    },
+    {
+      id: 'webgpu',
+      title: t('gallery.cases.webgpu.title'),
+      desc: t('gallery.cases.webgpu.desc'),
+      tags: ['WebGPU', 'Experimental'],
+      route: '/gallery'
+    }
+  ];
+
   return (
     <div className="gallery-container fade-in">
       {/* 页面标题 */}
       <header className="gallery-header">
-        <h1 className="home-title">案例集合</h1>
+        <h1 className="home-title">{t('gallery.title')}</h1>
         <p className="home-subtitle">
-          这里汇总了 piqiu 三维引擎的核心功能与典型应用场景
+          {t('gallery.subtitle')}
         </p>
       </header>
 
@@ -83,7 +85,7 @@ export default function Gallery() {
             </div>
 
             <Link to={item.route} className="nav-link mt-md">
-              查看案例
+              {t('gallery.viewCase')}
             </Link>
           </div>
         ))}

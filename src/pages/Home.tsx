@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import './Home.css';
 
 interface CaseItem {
@@ -9,35 +10,36 @@ interface CaseItem {
   route: string;
 }
 
-const CASES: CaseItem[] = [
-  {
-    id: 'basics',
-    title: '基础几何体',
-    desc: '立方体、球体、圆柱等基础几何体渲染',
-    tag: 'Geometry',
-    route: '/basics'
-  },
-  {
-    id: 'postprocess',
-    title: '后处理管线',
-    desc: '等值线 / 裁剪 / 包裹等后处理效果',
-    tag: 'PostProcess',
-    route: '/gallery'
-  }
-];
-
 export default function Home() {
+  const { t } = useTranslation();
+  const CASES: CaseItem[] = [
+    {
+      id: 'basics',
+      title: t('home.cases.basics.title'),
+      desc: t('home.cases.basics.desc'),
+      tag: 'Geometry',
+      route: '/basics'
+    },
+    {
+      id: 'postprocess',
+      title: t('home.cases.postprocess.title'),
+      desc: t('home.cases.postprocess.desc'),
+      tag: 'PostProcess',
+      route: '/gallery'
+    }
+  ];
+
   return (
     <div className="home-container">
       <section className="home-hero fade-in">
-        <h1 className="home-title">欢迎来到 piqiu 三维引擎官网</h1>
+        <h1 className="home-title">{t('home.title')}</h1>
         <p className="home-subtitle">
-          这里展示了使用 React 和 piqiu.js 构建的各种三维交互案例。
+          {t('home.subtitle')}
         </p>
 
         <nav className="nav-links">
-          <Link to="/basics" className="nav-link">基础几何体</Link>
-          <Link to="/gallery" className="nav-link">案例画廊</Link>
+          <Link to="/basics" className="nav-link">{t('home.navBasics')}</Link>
+          <Link to="/gallery" className="nav-link">{t('home.navGallery')}</Link>
         </nav>
       </section>
 
@@ -45,27 +47,25 @@ export default function Home() {
       <section className="home-main fade-in">
         {/* 左侧：说明 / 定位 */}
         <div className="home-main-left">
-          <h2>关于 piqiu</h2>
+          <h2>{t('home.aboutTitle')}</h2>
           <p>
-            piqiu 是一个面向 Web 的三维渲染引擎，专注于
-            <strong> WebGL / WebGPU </strong>
-            的工程化实践。
+            {t('home.aboutP1')}
           </p>
 
           <p className="mt-md">
-            本站案例涵盖：
+            {t('home.featuresTitle')}
           </p>
           <ul className="feature-list">
-            <li>GLTF / GLB 模型加载</li>
-            <li>大规模几何数据渲染</li>
-            <li>后处理与可视化算法</li>
-            <li>引擎级架构设计</li>
+            <li>{t('home.features.gltf')}</li>
+            <li>{t('home.features.geometry')}</li>
+            <li>{t('home.features.postprocess')}</li>
+            <li>{t('home.features.architecture')}</li>
           </ul>
         </div>
 
         {/* 右侧：案例合集（你要的） */}
         <div className="home-main-right">
-          <h2 className="case-collection-title">案例合集</h2>
+          <h2 className="case-collection-title">{t('home.casesTitle')}</h2>
 
           <ul className="case-list">
             {CASES.map(item => (

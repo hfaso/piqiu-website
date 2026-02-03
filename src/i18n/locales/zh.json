@@ -1,0 +1,88 @@
+{
+  "app": {
+    "loading3d": "三维场景加载中...",
+    "notFound": "页面不存在"
+  },
+  "brand": {
+    "name": "piqiu案例库"
+  },
+  "nav": {
+    "home": "首页",
+    "basics": "基础案例",
+    "loaderModel": "加载模型",
+    "gallery": "案例画廊"
+  },
+  "footer": {
+    "title": "piqiu3d案例库"
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English",
+    "switch": "语言"
+  },
+  "home": {
+    "title": "欢迎来到 piqiu 三维引擎官网",
+    "subtitle": "这里展示了使用 React 和 piqiu.js 构建的各种三维交互案例。",
+    "navBasics": "基础几何体",
+    "navGallery": "案例画廊",
+    "aboutTitle": "关于 piqiu",
+    "aboutP1": "piqiu 是一个面向 Web 的三维渲染引擎，专注于 WebGL / WebGPU 的工程化实践。",
+    "casesTitle": "案例合集",
+    "featuresTitle": "本站案例涵盖：",
+    "features": {
+      "gltf": "GLTF / GLB 模型加载",
+      "geometry": "大规模几何数据渲染",
+      "postprocess": "后处理与可视化算法",
+      "architecture": "引擎级架构设计"
+    },
+    "cases": {
+      "basics": {
+        "title": "基础几何体",
+        "desc": "立方体、球体、圆柱等基础几何体渲染"
+      },
+      "postprocess": {
+        "title": "后处理管线",
+        "desc": "等值线 / 裁剪 / 包裹等后处理效果"
+      }
+    }
+  },
+  "gallery": {
+    "title": "案例集合",
+    "subtitle": "这里汇总了 piqiu 三维引擎的核心功能与典型应用场景",
+    "viewCase": "查看案例",
+    "cases": {
+      "basics": {
+        "title": "基础几何体",
+        "desc": "立方体、球体、圆柱等基础几何体渲染示例"
+      },
+      "gltf": {
+        "title": "GLTF 模型加载",
+        "desc": "支持 GLTF / GLB 模型解析与高效渲染"
+      },
+      "postprocess": {
+        "title": "后处理效果",
+        "desc": "等值线、裁剪、包裹等后处理算法示例"
+      },
+      "webgpu": {
+        "title": "WebGPU 实验",
+        "desc": "基于 WebGPU 的新一代渲染管线探索"
+      }
+    }
+  },
+  "basics": {
+    "title": "基础案例：加载立方体",
+    "desc": "这个案例展示了一个基础的三维立方体。它实现了自动旋转动画，并且你可以通过鼠标进行交互：",
+    "controls": {
+      "rotate": "左键拖动：旋转视角",
+      "zoom": "滚轮缩放：放大/缩小",
+      "pan": "右键拖动：平移场景"
+    }
+  },
+  "loaderModel": {
+    "title": "基础案例：加载gltf模型",
+    "chooseLocal": "选择本地模型：",
+    "desc": "这个案例展示了加载gltf模型功能。你可以通过鼠标进行交互：",
+    "chooseFile": "选择文件",
+    "noFileSelected": "未选择任何文件"
+  }
+}

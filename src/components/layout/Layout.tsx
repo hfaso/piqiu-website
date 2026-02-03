@@ -1,6 +1,7 @@
 // components/layout/Layout.tsx
 import React from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Header from './Header';
 import './Layout.css';
 
@@ -11,6 +12,7 @@ interface LayoutProps {
 function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const { t } = useTranslation();
   
   return (
     <div className="layout">
@@ -24,7 +26,7 @@ function Layout({ children }: LayoutProps) {
       
       {/* 可选的页脚 */}
       <footer className="footer">
-        <p>piqiu3d案例库</p>
+        <p>{t('footer.title')}</p>
       </footer>
     </div>
   );

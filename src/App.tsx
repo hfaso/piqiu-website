@@ -1,6 +1,7 @@
 // App.tsx (更新版)
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
+import { useTranslation } from 'react-i18next';
 import Layout from './components/layout/Layout';
 
 // 使用懒加载引入页面组件
@@ -11,13 +12,14 @@ const Gallery = lazy(() => import('./pages/Gallery'));
 // 导入其他页面组件...
 
 function App() {
+  const { t } = useTranslation();
   return (
     <Router>
       <Layout>
         <Suspense fallback={
           <div className="loading-fallback">
             <div className="spinner"></div>
-            <p>三维场景加载中...</p>
+            <p>{t('app.loading3d')}</p>
           </div>
         }>
           <Routes>
@@ -26,7 +28,7 @@ function App() {
             <Route path="/loaderModel" element={<LoaderModel />} />
             <Route path="/gallery" element={<Gallery />} />
             {/* 其他路由 */}
-            <Route path="*" element={<div>页面不存在</div>} />
+            <Route path="*" element={<div>{t('app.notFound')}</div>} />
           </Routes>
         </Suspense>
       </Layout>

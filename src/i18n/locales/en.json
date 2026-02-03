@@ -1,0 +1,88 @@
+{
+  "app": {
+    "loading3d": "Loading 3D scene...",
+    "notFound": "Page not found"
+  },
+  "brand": {
+    "name": "piqiu examples"
+  },
+  "nav": {
+    "home": "Home",
+    "basics": "Basics",
+    "loaderModel": "Model Loader",
+    "gallery": "Gallery"
+  },
+  "footer": {
+    "title": "piqiu3d examples"
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English",
+    "switch": "Language"
+  },
+  "home": {
+    "title": "Welcome to piqiu 3D Engine",
+    "subtitle": "A collection of interactive 3D demos built with React and piqiu.js.",
+    "navBasics": "Basic Geometry",
+    "navGallery": "Gallery",
+    "aboutTitle": "About piqiu",
+    "aboutP1": "piqiu is a Web-oriented 3D rendering engine focused on engineering practices for WebGL / WebGPU.",
+    "casesTitle": "Case Collection",
+    "featuresTitle": "This site covers:",
+    "features": {
+      "gltf": "GLTF / GLB loading",
+      "geometry": "Large-scale geometry rendering",
+      "postprocess": "Post-processing & visualization",
+      "architecture": "Engine-level architecture"
+    },
+    "cases": {
+      "basics": {
+        "title": "Basic Geometry",
+        "desc": "Rendering basic shapes like cubes, spheres, cylinders, etc."
+      },
+      "postprocess": {
+        "title": "Post-processing Pipeline",
+        "desc": "Contours / clipping / wrapping and more"
+      }
+    }
+  },
+  "gallery": {
+    "title": "Cases",
+    "subtitle": "Core capabilities and typical application scenarios of the piqiu engine",
+    "viewCase": "View case",
+    "cases": {
+      "basics": {
+        "title": "Basic Geometry",
+        "desc": "Examples of rendering basic shapes like cubes, spheres, and cylinders."
+      },
+      "gltf": {
+        "title": "GLTF Model Loading",
+        "desc": "Efficient parsing and rendering for GLTF / GLB models."
+      },
+      "postprocess": {
+        "title": "Post-processing Effects",
+        "desc": "Examples of contours, clipping, wrapping, and other post-processing techniques."
+      },
+      "webgpu": {
+        "title": "WebGPU Experiments",
+        "desc": "Exploring next-generation rendering pipelines based on WebGPU."
+      }
+    }
+  },
+  "basics": {
+    "title": "Basic Demo: Cube",
+    "desc": "This demo shows a basic 3D cube with auto-rotation. You can interact with the mouse:",
+    "controls": {
+      "rotate": "Left drag: rotate",
+      "zoom": "Scroll: zoom in/out",
+      "pan": "Right drag: pan"
+    }
+  },
+  "loaderModel": {
+    "title": "Basic Demo: Load GLTF",
+    "chooseLocal": "Choose a local model:",
+    "desc": "This demo shows how to load a GLTF/GLB model. You can interact with the mouse:",
+    "chooseFile": "Choose file",
+    "noFileSelected": "No file selected"
+  }
+}

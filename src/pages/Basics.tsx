@@ -4,11 +4,13 @@ import './Basics.css'; // 引入样式文件
 // import CanvasContainer from '../components/CanvasContainer';
 // import RotatingCube from '../components/scenes/RotatingCube'; // 假设你的立方体组件在这个路径
 import BasicDemo from '../components/demo/BasicDemo'
+import { useTranslation } from 'react-i18next';
 
 function Basics() {
+    const { t } = useTranslation();
     return (
         <div className="basics-container">
-            <h2 className="basics-title">基础案例：加载立方体</h2>
+            <h2 className="basics-title">{t('basics.title')}</h2>
             {/* 三维画布区域 */}
             {/* <CanvasContainer>
                 <RotatingCube />
@@ -16,11 +18,11 @@ function Basics() {
             {/* 案例说明区域 */}
             <BasicDemo></BasicDemo>
             <div className="case-description">
-                <p>这个案例展示了一个基础的三维立方体。它实现了自动旋转动画，并且你可以通过鼠标进行交互：</p>
+                <p>{t('basics.desc')}</p>
                 <ul>
-                    <li>左键拖动：旋转视角</li>
-                    <li>滚轮缩放：放大/缩小</li>
-                    <li>右键拖动：平移场景</li>
+                    <li>{t('basics.controls.rotate')}</li>
+                    <li>{t('basics.controls.zoom')}</li>
+                    <li>{t('basics.controls.pan')}</li>
                 </ul>
             </div>
         </div>

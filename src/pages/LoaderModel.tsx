@@ -1,9 +1,12 @@
 import "./LoaderModel.css";
 import LoaderModelDemo from "../components/demo/LoaderModel";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 function LoaderModel() {
   const [file, setFile] = useState<File | null>(null);
+  const { t } = useTranslation();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files && e.target.files[0];
@@ -13,19 +16,40 @@ function LoaderModel() {
 
   return (
     <div className="basics-container">
-      <h2 className="basics-title">基础案例：加载gltf模型</h2>
+      <h2 className="basics-title">{t("loaderModel.title")}</h2>
 
       {/* 文件选择：支持 .gltf/.glb 本地文件，未选择时使用默认模型 */}
       <div style={{ marginBottom: 12 }}>
-        <label>
-          选择本地模型：
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span>{t("loaderModel.chooseLocal")}</span>
+
           <input
+            ref={fileInputRef}
             type="file"
             accept=".gltf,.glb,model/gltf+json,model/gltf-binary"
             onChange={onFileChange}
-            style={{ marginLeft: 8 }}
+            style={{ display: "none" }}
           />
-        </label>
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              color: "inherit",
+              border: "1px solid rgba(255,255,255,0.18)",
+              borderRadius: 10,
+              padding: "8px 12px",
+              cursor: "pointer",
+            }}
+          >
+            {t("loaderModel.chooseFile")}
+          </button>
+
+          <span style={{ opacity: 0.85 }}>
+            {file ? file.name : t("loaderModel.noFileSelected")}
+          </span>
+        </div>
       </div>
 
       {/* 三维画布区域，传入选择的文件（如果有） */}
@@ -33,11 +57,11 @@ function LoaderModel() {
 
       {/* 案例说明区域 */}
       <div className="case-description">
-        <p>这个案例展示了加载gltf模型功能。你可以通过鼠标进行交互：</p>
+        <p>{t("loaderModel.desc")}</p>
         <ul>
-          <li>左键拖动：旋转视角</li>
-          <li>滚轮缩放：放大/缩小</li>
-          <li>右键拖动：平移场景</li>
+          <li>{t("basics.controls.rotate")}</li>
+          <li>{t("basics.controls.zoom")}</li>
+          <li>{t("basics.controls.pan")}</li>
         </ul>
       </div>
     </div>
