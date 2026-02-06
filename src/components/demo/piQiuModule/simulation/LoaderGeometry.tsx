@@ -81,11 +81,9 @@ export default function CanvasContainer({ source }: Props) {
         // ignore
       }
 
-      const meshes = await piqiu3d.Loader.loadZip(src);
+      const part = await piqiu3d.Loader.loadZip(src);
       if (version !== loadVersionRef.current) return;
-      for (const mesh of meshes) {
-        piqiuRenderer.addPart(mesh);
-      }
+      piqiuRenderer.addPart(part);
       piqiuRenderer.updateCamera();
     };
 
