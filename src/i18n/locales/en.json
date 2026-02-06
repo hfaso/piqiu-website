@@ -59,9 +59,17 @@
         "title": "GLTF Model Loading",
         "desc": "Efficient parsing and rendering for GLTF / GLB models."
       },
-      "postprocess": {
-        "title": "Post-processing Effects",
-        "desc": "Examples of contours, clipping, wrapping, and other post-processing techniques."
+      "geometry": {
+        "title": "Geometry Rendering",
+        "desc": "Examples of rendering geometry with optimized performance."
+      },
+      "mesh": {
+        "title": "Mesh Rendering",
+        "desc": "Examples of rendering mesh with optimized performance."
+      },
+      "simulation": {
+        "title": "SimulationResult Rendering",
+        "desc": "Examples of simulating simulationResult with optimized performance."
       },
       "webgpu": {
         "title": "WebGPU Experiments",

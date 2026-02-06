@@ -27,21 +27,35 @@ export default function Gallery() {
       title: t('gallery.cases.gltf.title'),
       desc: t('gallery.cases.gltf.desc'),
       tags: ['GLTF', 'Loader'],
-      route: '/gallery'
+      route: '/loaderModel',
     },
     {
-      id: 'postprocess',
-      title: t('gallery.cases.postprocess.title'),
-      desc: t('gallery.cases.postprocess.desc'),
-      tags: ['PostProcess', 'FBO'],
-      route: '/gallery'
+      id: 'geometry',
+      title: t('gallery.cases.geometry.title'),
+      desc: t('gallery.cases.geometry.desc'),
+      tags: ['Geometry', 'Render'],
+      route: '/loaderSimulation',
+    },
+    {
+      id: 'mesh',
+      title: t('gallery.cases.mesh.title'),
+      desc: t('gallery.cases.mesh.desc'),
+      tags: ['Mesh', 'Render'],
+      route: '/loaderSimulation'
+    },
+    {
+      id: 'simulation',
+      title: t('gallery.cases.simulation.title'),
+      desc: t('gallery.cases.simulation.desc'),
+      tags: ['Simulation', 'Render'],
+      route: '/loaderSimulation'
     },
     {
       id: 'webgpu',
       title: t('gallery.cases.webgpu.title'),
       desc: t('gallery.cases.webgpu.desc'),
       tags: ['WebGPU', 'Experimental'],
-      route: '/gallery'
+      route: '/webgpu'
     }
   ];
 

@@ -7,6 +7,7 @@ import {
 import { Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import Layout from './components/layout/Layout';
+import LoaderSimulation from './pages/LoaderSimulation';
 
 const Home = lazy(() => import('./pages/Home'));
 const Basics = lazy(() => import('./pages/Basics'));
@@ -36,6 +37,7 @@ function App() {
             <Route path="/basics" element={<Basics />} />
             <Route path="/loaderModel" element={<LoaderModel />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/loaderSimulation" element={<LoaderSimulation />} />
 
             {/* 兜底 */}
             <Route path="*" element={<div>{t('app.notFound')}</div>} />

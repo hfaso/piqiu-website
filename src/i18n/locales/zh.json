@@ -59,9 +59,17 @@
         "title": "GLTF 模型加载",
         "desc": "支持 GLTF / GLB 模型解析与高效渲染"
       },
-      "postprocess": {
-        "title": "后处理效果",
-        "desc": "等值线、裁剪、包裹等后处理算法示例"
+      "geometry": {
+        "title": "几何体渲染",
+        "desc": "几何体渲染示例"
+      },
+      "mesh": {
+        "title": "网格渲染",
+        "desc": "网格渲染示例"
+      },
+      "simulation": {
+        "title": "有限元模拟结果渲染",
+        "desc": "有限元模拟结果渲染示例"
       },
       "webgpu": {
         "title": "WebGPU 实验",
