@@ -82,15 +82,15 @@ export default function CanvasContainer({ source }: Props) {
       }
 
       const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
-      const { database } = new piqiu3d.LoadDataBase(data, 'surface');
-      console.timeEnd('GEOLoader');
+      const { database } = new piqiu3d.LoadDataBase(data, "surface");
+      console.timeEnd("GEOLoader");
       const res = {
         ...data,
         database,
         ArrayBuffer,
       };
       debugger;
-      piqiuRenderer.loadSiumlationFile(data);
+      piqiuRenderer.loadSiumlationFile(res);
       console.log("LoaderModel: finished loading", src);
       // if (version !== loadVersionRef.current) return;
       // piqiuRenderer.addPart(part);
