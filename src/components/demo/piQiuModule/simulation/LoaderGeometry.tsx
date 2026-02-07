@@ -81,10 +81,20 @@ export default function CanvasContainer({ source }: Props) {
         // ignore
       }
 
-      const part = await piqiu3d.Loader.loadZip(src);
-      if (version !== loadVersionRef.current) return;
-      piqiuRenderer.addPart(part);
-      piqiuRenderer.updateCamera();
+      const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
+      const { database } = new piqiu3d.LoadDataBase(data, 'surface');
+      console.timeEnd('GEOLoader');
+      const res = {
+        ...data,
+        database,
+        ArrayBuffer,
+      };
+      debugger;
+      piqiuRenderer.loadSiumlationFile(data);
+      console.log("LoaderModel: finished loading", src);
+      // if (version !== loadVersionRef.current) return;
+      // piqiuRenderer.addPart(part);
+      // piqiuRenderer.updateCamera();
     };
 
     loadModel();

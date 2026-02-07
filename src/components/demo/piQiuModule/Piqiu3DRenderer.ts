@@ -1,4 +1,5 @@
 import * as piqiu3d from "piqiu3d";
+import { get } from "lodash";
 import { useMouseHandler } from "./handler/MouseHandler";
 import { vec2 } from "gl-matrix";
 
@@ -64,6 +65,78 @@ export class Piqiu3DRenderer {
   addPart(part: piqiu3d.Part) {
     this.model.add(part);
     this.model.update();
+  }
+
+  async loadSiumlationFile(
+    data?: piqiu3d.LoadDataBase,
+    options?: {
+      color?: [number, number, number];
+      hoverColor?: [number, number, number, number];
+    },
+  ){
+    console.time('Load');
+    const loaderDataModel = get(data, 'database.model') as piqiu3d.LoaderDataModel | undefined;
+    if (!loaderDataModel) {
+      console.warn('LoadSimulationFile: database.model is missing.');
+      console.timeEnd('Load');
+      return;
+    }
+    const { partBuffer, boundingBox, transform } = loaderDataModel;
+
+    for (let i = 0; i < partBuffer.length; i++) {
+      const partDataBuffer = partBuffer[i];
+      let partDataDrawable = new piqiu3d.PartDataDrawable(partDataBuffer);
+      partDataBuffer?.forEach((buffer) => {
+        if (buffer instanceof piqiu3d.GeoDataBuffer) {
+          if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.FACE) {
+            let _geoData = new piqiu3d.GeoDataDrawable({ buffer }, options);
+            _geoData.geoType = piqiu3d.DRAW.surface;
+            _geoData.transform = partDataDrawable.transform;
+            partDataDrawable.PartList.push(_geoData);
+            partDataDrawable.id = _geoData.buffer.geomid;
+          }
+          if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.EDGE) {
+            let _geoData = new piqiu3d.GeoDataDrawable({ buffer });
+            _geoData.visible = false;
+            _geoData.fboType = piqiu3d.FBOType.line;
+            _geoData.color = piqiu3d.defaultLineColor;
+            _geoData.geoType = piqiu3d.DRAW.wire;
+            _geoData._draw = [piqiu3d.DRAW.wire];
+            _geoData.transform = partDataDrawable.transform;
+            partDataDrawable.PartList.push(_geoData);
+            partDataDrawable.id = _geoData.buffer.geomid;
+          }
+          if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.VERTEX) {
+            let _geoData = new piqiu3d.GeoDataDrawable({ buffer });
+            _geoData.visible = false;
+            _geoData.fboType = piqiu3d.FBOType.point;
+            _geoData.geoType = piqiu3d.DRAW.point;
+            _geoData._draw = [piqiu3d.DRAW.point];
+            _geoData.transform = partDataDrawable.transform;
+            partDataDrawable.PartList.push(_geoData);
+            partDataDrawable.id = _geoData.buffer.geomid;
+          }
+        }
+        if (buffer instanceof piqiu3d.MeshDataBuffer) {
+          let _meshData = new piqiu3d.MeshDataDrawable({ buffer }, options);
+          _meshData.transform = partDataDrawable.transform;
+          partDataDrawable.PartList.push(_meshData);
+          partDataDrawable.id = _meshData.buffer.id;
+        }
+        if (buffer instanceof piqiu3d.PostDataBuffer) {
+          let _postData = new piqiu3d.PostDataDrawable({
+            buffer,
+          });
+          _postData.transform = partDataDrawable.transform;
+          partDataDrawable.PartList.push(_postData);
+        }
+      });
+
+      console.log('Adding drawable:', partDataDrawable.id);
+      // scene.addPart(partDataDrawable);
+    }
+
+    console.timeEnd('Load');
   }
 
   // 添加通用事件监听器

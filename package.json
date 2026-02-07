@@ -11,9 +11,11 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@types/lodash": "^4.17.23",
     "gl-matrix": "3.4.3",
     "i18next": "^25.8.0",
     "i18next-browser-languagedetector": "^8.2.0",
+    "lodash": "4.17.21",
     "piqiu3d": "git+ssh://git@github.com/hfaso/piqiu3d.git#v0.1.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
