@@ -3,7 +3,6 @@ import * as piqiu3d from "piqiu3d";
 import { Piqiu3DRenderer } from "../Piqiu3DRenderer";
 
 type Props = {
-  /** 可以传入本地 File，或者一个 URL 字符串；如果为空则使用默认模型 */
   source?: string | File | null;
 };
 
@@ -12,9 +11,6 @@ export default function CanvasContainer({ source }: Props) {
   const rendererRef = useRef<Piqiu3DRenderer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
 
-  // const loadVersionRef = useRef(0);
-
-  // 初始化渲染器（仅在挂载时）
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -28,9 +24,7 @@ export default function CanvasContainer({ source }: Props) {
     });
     rendererRef.current = piqiuRenderer;
 
-    // 卸载时清理
     return () => {
-      // revoke any created object URL
       if (objectUrlRef.current) {
         URL.revokeObjectURL(objectUrlRef.current);
         objectUrlRef.current = null;
@@ -56,7 +50,7 @@ export default function CanvasContainer({ source }: Props) {
     }
 
     if (!source) {
-      src = `${import.meta.env.BASE_URL}models/044p.zip`;
+      src = `${import.meta.env.BASE_URL}models/chejia.zip`;
     } else if (typeof source === "string") {
       src = source;
     } else {
@@ -67,8 +61,6 @@ export default function CanvasContainer({ source }: Props) {
 
     const loadModel = async () => {
       const piqiuRenderer = rendererRef.current!;
-      //const version = ++loadVersionRef.current;
-      // console.log("LoaderModel: start loading", src);
 
       try {
         const m = piqiuRenderer.model;

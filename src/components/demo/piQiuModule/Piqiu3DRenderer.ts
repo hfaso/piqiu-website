@@ -81,7 +81,6 @@ export class Piqiu3DRenderer {
       color?: [number, number, number];
     },
   ) {
-    console.time("Load");
     const loaderDataModel = get(data, "database.model") as
       | piqiu3d.LoaderDataModel
       | undefined;
@@ -143,13 +142,20 @@ export class Piqiu3DRenderer {
       const part = new piqiu3d.Part();
       partsData.addDrawablesToPart(part);
       this.addPart(part);
-      console.log('loading part', i, '/', partBuffer.length);
-      if (i === partBuffer.length - 1) {
-        debugger;
-      }
+      console.log("loading part", i, "/", partBuffer.length);
     }
-    this.boundingBox = new piqiu3d.BoundingBox(vec3.fromValues(data?.database.boundingBox?.min[0] as number, data?.database.boundingBox?.min[1] as number, data?.database.boundingBox?.min[2] as number),
-      vec3.fromValues(data?.database.boundingBox?.max[0] as number, data?.database.boundingBox?.max[1] as number, data?.database.boundingBox?.max[2] as number));
+    this.boundingBox = new piqiu3d.BoundingBox(
+      vec3.fromValues(
+        data?.database.boundingBox?.min[0] as number,
+        data?.database.boundingBox?.min[1] as number,
+        data?.database.boundingBox?.min[2] as number,
+      ),
+      vec3.fromValues(
+        data?.database.boundingBox?.max[0] as number,
+        data?.database.boundingBox?.max[1] as number,
+        data?.database.boundingBox?.max[2] as number,
+      ),
+    );
   }
 
   // 添加通用事件监听器
@@ -193,7 +199,11 @@ export class Piqiu3DRenderer {
   updateCamera() {
     const resetTool = new piqiu3d.ResetTool(this.builtInUniforms);
 
-    if (this.boundingBox === undefined || this.boundingBox.max[0] === -Infinity || this.boundingBox.min[0] === Infinity) {
+    if (
+      this.boundingBox === undefined ||
+      this.boundingBox.max[0] === -Infinity ||
+      this.boundingBox.min[0] === Infinity
+    ) {
       this.model.computeBoundingBox();
       this.boundingBox = this.model.boundingBox;
     }
