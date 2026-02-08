@@ -12,7 +12,7 @@ interface CaseItem {
   desc: string;
   tags: string[];
   route: string;
-  loaderType: 'geometry' | 'mesh' | 'simulation';
+  loaderType: "geometry" | "mesh" | "simulation";
 }
 
 function LoaderSimulation() {
@@ -20,38 +20,41 @@ function LoaderSimulation() {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [searchParams] = useSearchParams();
-  
+
   // 定义各个案例的加载器类型
-  const cases: Record<string, CaseItem> = useMemo(() => ({
-    geometry: {
-      id: 'geometry',
-      title: t('gallery.cases.geometry.title'),
-      desc: t('gallery.cases.geometry.desc'),
-      tags: ['Geometry', 'Render'],
-      route: '/loaderGeometry',
-      loaderType: 'geometry',
-    },
-    mesh: {
-      id: 'mesh',
-      title: t('gallery.cases.mesh.title'),
-      desc: t('gallery.cases.mesh.desc'),
-      tags: ['Mesh', 'Render'],
-      route: '/loaderMesh',
-      loaderType: 'mesh',
-    },
-    simulation: {
-      id: 'simulation',
-      title: t('gallery.cases.simulation.title'),
-      desc: t('gallery.cases.simulation.desc'),
-      tags: ['Simulation', 'Render'],
-      route: '/loaderSimulationResult',
-      loaderType: 'simulation',
-    },
-  }), [t]);
+  const cases: Record<string, CaseItem> = useMemo(
+    () => ({
+      geometry: {
+        id: "geometry",
+        title: t("gallery.cases.geometry.title"),
+        desc: t("gallery.cases.geometry.desc"),
+        tags: ["Geometry", "Render"],
+        route: "/loaderGeometry",
+        loaderType: "geometry",
+      },
+      mesh: {
+        id: "mesh",
+        title: t("gallery.cases.mesh.title"),
+        desc: t("gallery.cases.mesh.desc"),
+        tags: ["Mesh", "Render"],
+        route: "/loaderMesh",
+        loaderType: "mesh",
+      },
+      simulation: {
+        id: "simulation",
+        title: t("gallery.cases.simulation.title"),
+        desc: t("gallery.cases.simulation.desc"),
+        tags: ["Simulation", "Render"],
+        route: "/loaderSimulationResult",
+        loaderType: "simulation",
+      },
+    }),
+    [t],
+  );
 
   // 获取当前 case 类型（从 URL 参数或路由）
-  const caseId = searchParams.get('case') || 'geometry';
-  const currentCase = cases[caseId] || cases['geometry'];
+  const caseId = searchParams.get("case") || "geometry";
+  const currentCase = cases[caseId] || cases["geometry"];
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files && e.target.files[0];
@@ -65,7 +68,14 @@ function LoaderSimulation() {
 
       {/* 文件选择：支持 .gltf/.glb 本地文件，未选择时使用默认模型 */}
       <div style={{ marginBottom: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+          }}
+        >
           <span>{t("loaderModel.chooseLocal")}</span>
 
           <input
@@ -98,19 +108,17 @@ function LoaderSimulation() {
       </div>
 
       {/* 根据 case 类型选择不同的 loader 组件 */}
-      {currentCase.loaderType === 'geometry' && (
+      {currentCase.loaderType === "geometry" && (
         <LoaderGeometryDemo source={file} />
       )}
-      {currentCase.loaderType === 'mesh' && (
-        <LoaderMeshDemo source={file} />
-      )}
-      {currentCase.loaderType === 'simulation' && (
+      {currentCase.loaderType === "mesh" && <LoaderMeshDemo source={file} />}
+      {currentCase.loaderType === "simulation" && (
         <LoaderSimulationResultDemo source={file} />
       )}
 
       {/* 案例说明区域 */}
       <div className="case-description">
-        <p>{t("loaderModel.desc")}</p>
+        <p>{t("loaderGeoModel.desc")}</p>
         <ul>
           <li>{t("basics.controls.rotate")}</li>
           <li>{t("basics.controls.zoom")}</li>

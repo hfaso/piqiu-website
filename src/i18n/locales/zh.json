@@ -92,5 +92,26 @@
     "desc": "这个案例展示了加载gltf模型功能。你可以通过鼠标进行交互：",
     "chooseFile": "选择文件",
     "noFileSelected": "未选择任何文件"
+  },
+  "loaderGeoModel": {
+    "title": "基础案例：加载几何模型",
+    "chooseLocal": "选择本地模型：",
+    "desc": "这个案例展示了加载几何模型功能。你可以通过鼠标进行交互：",
+    "chooseFile": "选择文件",
+    "noFileSelected": "未选择任何文件"
+  },
+  "loaderMeshModel": {
+    "title": "基础案例：加载网格模型",
+    "chooseLocal": "选择本地模型：",
+    "desc": "这个案例展示了加载网格模型功能。你可以通过鼠标进行交互：",
+    "chooseFile": "选择文件",
+    "noFileSelected": "未选择任何文件"
+  },
+  "loaderSimulationResultModel": {
+    "title": "基础案例：加载云图模型",
+    "chooseLocal": "选择本地模型：",
+    "desc": "这个案例展示了加载云图模型功能。你可以通过鼠标进行交互：",
+    "chooseFile": "选择文件",
+    "noFileSelected": "未选择任何文件"
   }
 }
