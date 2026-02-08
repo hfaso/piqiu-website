@@ -12,7 +12,7 @@ export default function CanvasContainer({ source }: Props) {
   const rendererRef = useRef<Piqiu3DRenderer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
 
-  const loadVersionRef = useRef(0);
+  // const loadVersionRef = useRef(0);
 
   // 初始化渲染器（仅在挂载时）
   useEffect(() => {
@@ -67,8 +67,8 @@ export default function CanvasContainer({ source }: Props) {
 
     const loadModel = async () => {
       const piqiuRenderer = rendererRef.current!;
-      const version = ++loadVersionRef.current;
-      console.log("LoaderModel: start loading", src);
+      //const version = ++loadVersionRef.current;
+      // console.log("LoaderModel: start loading", src);
 
       try {
         const m = piqiuRenderer.model;
@@ -83,18 +83,13 @@ export default function CanvasContainer({ source }: Props) {
 
       const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
       const { database } = new piqiu3d.LoadDataBase(data, "surface");
-      console.timeEnd("GEOLoader");
       const res = {
         ...data,
         database,
         ArrayBuffer,
       };
-      debugger;
       piqiuRenderer.loadSiumlationFile(res);
-      console.log("LoaderModel: finished loading", src);
-      // if (version !== loadVersionRef.current) return;
-      // piqiuRenderer.addPart(part);
-      // piqiuRenderer.updateCamera();
+      piqiuRenderer.updateCamera();
     };
 
     loadModel();

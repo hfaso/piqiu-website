@@ -1,7 +1,7 @@
 import * as piqiu3d from "piqiu3d";
 import { get } from "lodash";
 import { useMouseHandler } from "./handler/MouseHandler";
-import { vec2 } from "gl-matrix";
+import { vec2, vec3 } from "gl-matrix";
 
 export class Piqiu3DRenderer {
   private canvas: HTMLCanvasElement;
@@ -10,6 +10,7 @@ export class Piqiu3DRenderer {
   public scene: piqiu3d.Scene;
   public mouseHandler: any;
   public dpr = window.devicePixelRatio || 1;
+  public _boundingBox: piqiu3d.BoundingBox | undefined;
   // 可以按需暴露其他属性，如模型、内置uniforms等
   public get model() {
     return this.renderPass.model;
@@ -64,14 +65,20 @@ export class Piqiu3DRenderer {
   // 简化part增加方法
   addPart(part: piqiu3d.Part) {
     this.model.add(part);
-    this.model.update();
+  }
+
+  get boundingBox() {
+    return this._boundingBox;
+  }
+
+  set boundingBox(bbox: piqiu3d.BoundingBox | undefined) {
+    this._boundingBox = bbox;
   }
 
   async loadSiumlationFile(
     data?: piqiu3d.LoadDataBase,
     options?: {
       color?: [number, number, number];
-      hoverColor?: [number, number, number, number];
     },
   ) {
     console.time("Load");
@@ -87,15 +94,15 @@ export class Piqiu3DRenderer {
 
     for (let i = 0; i < partBuffer.length; i++) {
       const partDataBuffer = partBuffer[i];
-      const partDataDrawable = new piqiu3d.PartDataDrawable(partDataBuffer);
+      const partsData = new piqiu3d.PartsData(partDataBuffer);
       partDataBuffer?.forEach((buffer) => {
         if (buffer instanceof piqiu3d.GeoDataBuffer) {
           if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.FACE) {
             const _geoData = new piqiu3d.GeoDataDrawable({ buffer }, options);
             _geoData.geoType = piqiu3d.DRAW.surface;
-            _geoData.transform = partDataDrawable.transform;
-            partDataDrawable.PartList.push(_geoData);
-            partDataDrawable.id = _geoData.buffer.geomid;
+            _geoData.transform = partsData.transform;
+            partsData.DrawableDataList.push(_geoData);
+            partsData.id = _geoData.buffer.geomid;
           }
           if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.EDGE) {
             const _geoData = new piqiu3d.GeoDataDrawable({ buffer });
@@ -104,9 +111,9 @@ export class Piqiu3DRenderer {
             _geoData.color = piqiu3d.defaultLineColor;
             _geoData.geoType = piqiu3d.DRAW.wire;
             _geoData._draw = [piqiu3d.DRAW.wire];
-            _geoData.transform = partDataDrawable.transform;
-            partDataDrawable.PartList.push(_geoData);
-            partDataDrawable.id = _geoData.buffer.geomid;
+            _geoData.transform = partsData.transform;
+            partsData.DrawableDataList.push(_geoData);
+            partsData.id = _geoData.buffer.geomid;
           }
           if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.VERTEX) {
             const _geoData = new piqiu3d.GeoDataDrawable({ buffer });
@@ -114,37 +121,35 @@ export class Piqiu3DRenderer {
             _geoData.fboType = piqiu3d.FBOType.point;
             _geoData.geoType = piqiu3d.DRAW.point;
             _geoData._draw = [piqiu3d.DRAW.point];
-            _geoData.transform = partDataDrawable.transform;
-            partDataDrawable.PartList.push(_geoData);
-            partDataDrawable.id = _geoData.buffer.geomid;
+            _geoData.transform = partsData.transform;
+            partsData.DrawableDataList.push(_geoData);
+            partsData.id = _geoData.buffer.geomid;
           }
         }
         if (buffer instanceof piqiu3d.MeshDataBuffer) {
           const _meshData = new piqiu3d.MeshDataDrawable({ buffer }, options);
-          _meshData.transform = partDataDrawable.transform;
-          partDataDrawable.PartList.push(_meshData);
-          partDataDrawable.id = _meshData.buffer.id;
+          _meshData.transform = partsData.transform;
+          partsData.DrawableDataList.push(_meshData);
+          partsData.id = _meshData.buffer.id;
         }
         if (buffer instanceof piqiu3d.PostDataBuffer) {
           const _postData = new piqiu3d.PostDataDrawable({
             buffer,
           });
-          _postData.transform = partDataDrawable.transform;
-          partDataDrawable.PartList.push(_postData);
+          _postData.transform = partsData.transform;
+          partsData.DrawableDataList.push(_postData);
         }
       });
-
-      console.log("Adding drawable:", partDataDrawable);
       const part = new piqiu3d.Part();
-      // partDataDrawable.PartList.forEach(i => {
-      //   i.forEach((j: piqiu3d.Drawable) => {
-      //     part.push(j);
-      //   });
-      // });
-      //   this.addPart(partDataDrawable);
+      partsData.addDrawablesToPart(part);
+      this.addPart(part);
+      console.log('loading part', i, '/', partBuffer.length);
+      if (i === partBuffer.length - 1) {
+        debugger;
+      }
     }
-
-    console.timeEnd("Load");
+    this.boundingBox = new piqiu3d.BoundingBox(vec3.fromValues(data?.database.boundingBox?.min[0] as number, data?.database.boundingBox?.min[1] as number, data?.database.boundingBox?.min[2] as number),
+      vec3.fromValues(data?.database.boundingBox?.max[0] as number, data?.database.boundingBox?.max[1] as number, data?.database.boundingBox?.max[2] as number));
   }
 
   // 添加通用事件监听器
@@ -188,11 +193,19 @@ export class Piqiu3DRenderer {
   updateCamera() {
     const resetTool = new piqiu3d.ResetTool(this.builtInUniforms);
 
-    this.model.computeBoundingBox();
-    const boundingBox = this.model.boundingBox;
+    if (this.boundingBox === undefined || this.boundingBox.max[0] === -Infinity || this.boundingBox.min[0] === Infinity) {
+      this.model.computeBoundingBox();
+      this.boundingBox = this.model.boundingBox;
+    }
 
-    resetTool.home(boundingBox);
+    if (!this.boundingBox) {
+      console.warn("Bounding box is unavailable; skipping camera reset.");
+      return;
+    }
 
+    resetTool.home(this.boundingBox);
+
+    this.model.update();
     this.scene.render();
   }
 
