@@ -56,6 +56,8 @@ function LoaderSimulation() {
   const caseId = searchParams.get("case") || "geometry";
   const currentCase = cases[caseId] || cases["geometry"];
 
+  console.log(currentCase.loaderType);
+
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files && e.target.files[0];
     if (f) setFile(f);

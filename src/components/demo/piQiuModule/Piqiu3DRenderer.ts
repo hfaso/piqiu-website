@@ -126,7 +126,7 @@ export class Piqiu3DRenderer {
           }
         }
         if (buffer instanceof piqiu3d.MeshDataBuffer) {
-          const _meshData = new piqiu3d.MeshDataDrawable({ buffer }, options);
+          const _meshData = new piqiu3d.MeshDataDrawable({ buffer });
           _meshData.transform = partsData.transform;
           partsData.DrawableDataList.push(_meshData);
           partsData.id = _meshData.buffer.id;
@@ -156,6 +156,7 @@ export class Piqiu3DRenderer {
         data?.database.boundingBox?.max[2] as number,
       ),
     );
+    console.log(this.boundingBox);
   }
 
   // 添加通用事件监听器

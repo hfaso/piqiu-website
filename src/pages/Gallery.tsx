@@ -34,21 +34,21 @@ export default function Gallery() {
       title: t('gallery.cases.geometry.title'),
       desc: t('gallery.cases.geometry.desc'),
       tags: ['Geometry', 'Render'],
-      route: '/loaderSimulation',
+      route: '/loaderSimulation?case=geometry',
     },
     {
       id: 'mesh',
       title: t('gallery.cases.mesh.title'),
       desc: t('gallery.cases.mesh.desc'),
       tags: ['Mesh', 'Render'],
-      route: '/loaderSimulation'
+      route: '/loaderSimulation?case=mesh'
     },
     {
       id: 'simulation',
       title: t('gallery.cases.simulation.title'),
       desc: t('gallery.cases.simulation.desc'),
       tags: ['Simulation', 'Render'],
-      route: '/loaderSimulation'
+      route: '/loaderSimulation?case=simulation'
     },
     {
       id: 'webgpu',
