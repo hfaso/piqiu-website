@@ -50,7 +50,7 @@ export default function CanvasContainer({ source }: Props) {
     }
 
     if (!source) {
-      src = `${import.meta.env.BASE_URL}models/mesh_jiaota.zip`;
+      src = `${import.meta.env.BASE_URL}models/mesh2.zip`;
     } else if (typeof source === "string") {
       src = source;
     } else {

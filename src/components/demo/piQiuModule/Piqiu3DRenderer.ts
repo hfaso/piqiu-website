@@ -1,7 +1,8 @@
 import * as piqiu3d from "piqiu3d";
-import { get } from "lodash";
+import { get, includes } from "lodash";
 import { useMouseHandler } from "./handler/MouseHandler";
 import { vec2, vec3 } from "gl-matrix";
+import { DRAW, Drawable } from "piqiu3d";
 
 export class Piqiu3DRenderer {
   private canvas: HTMLCanvasElement;
@@ -75,7 +76,7 @@ export class Piqiu3DRenderer {
     this._boundingBox = bbox;
   }
 
-  async loadSiumlationFile(
+  loadSiumlationFile(
     data?: piqiu3d.LoadDataBase,
     options?: {
       color?: [number, number, number];
@@ -126,6 +127,7 @@ export class Piqiu3DRenderer {
           }
         }
         if (buffer instanceof piqiu3d.MeshDataBuffer) {
+          debugger;
           const _meshData = new piqiu3d.MeshDataDrawable({ buffer });
           _meshData.transform = partsData.transform;
           partsData.DrawableDataList.push(_meshData);
@@ -200,6 +202,7 @@ export class Piqiu3DRenderer {
   updateCamera() {
     const resetTool = new piqiu3d.ResetTool(this.builtInUniforms);
 
+    debugger;
     if (
       this.boundingBox === undefined ||
       this.boundingBox.max[0] === -Infinity ||
