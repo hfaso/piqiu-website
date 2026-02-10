@@ -1,8 +1,7 @@
 import * as piqiu3d from "piqiu3d";
-import { get, includes } from "lodash";
+import { get } from "lodash";
 import { useMouseHandler } from "./handler/MouseHandler";
 import { vec2, vec3 } from "gl-matrix";
-import { DRAW, Drawable } from "piqiu3d";
 
 export class Piqiu3DRenderer {
   private canvas: HTMLCanvasElement;
