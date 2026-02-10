@@ -127,9 +127,9 @@ export class Piqiu3DRenderer {
           }
         }
         if (buffer instanceof piqiu3d.MeshDataBuffer) {
-          debugger;
           const _meshData = new piqiu3d.MeshDataDrawable({ buffer });
           _meshData.transform = partsData.transform;
+          _meshData.visible = true;
           partsData.DrawableDataList.push(_meshData);
           partsData.id = _meshData.buffer.id;
         }
