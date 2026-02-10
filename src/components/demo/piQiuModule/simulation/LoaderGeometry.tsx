@@ -75,7 +75,6 @@ export default function CanvasContainer({ source }: Props) {
 
       const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
       const { database } = new piqiu3d.LoadDataBase(data, "surface");
-      debugger;
       const res = {
         ...data,
         database,

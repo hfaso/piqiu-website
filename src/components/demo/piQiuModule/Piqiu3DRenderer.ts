@@ -202,7 +202,6 @@ export class Piqiu3DRenderer {
   updateCamera() {
     const resetTool = new piqiu3d.ResetTool(this.builtInUniforms);
 
-    debugger;
     if (
       this.boundingBox === undefined ||
       this.boundingBox.max[0] === -Infinity ||

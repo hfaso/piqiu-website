@@ -50,7 +50,7 @@ export default function CanvasContainer({ source }: Props) {
     }
 
     if (!source) {
-      src = `${import.meta.env.BASE_URL}models/mesh2.zip`;
+      src = `${import.meta.env.BASE_URL}models/post.zip`;
     } else if (typeof source === "string") {
       src = source;
     } else {
@@ -80,12 +80,10 @@ export default function CanvasContainer({ source }: Props) {
         database,
         ArrayBuffer,
       };
-      debugger;
       piqiuRenderer.loadSiumlationFile(res);
       piqiuRenderer.updateCamera();
     };
 
-    debugger;
     loadModel();
     rendererRef.current.addGeneralEventListener();
   }, [source]);

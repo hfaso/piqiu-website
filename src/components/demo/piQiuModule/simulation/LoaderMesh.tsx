@@ -80,12 +80,10 @@ export default function CanvasContainer({ source }: Props) {
         database,
         ArrayBuffer,
       };
-      debugger;
       piqiuRenderer.loadSiumlationFile(res);
       piqiuRenderer.updateCamera();
     };
 
-    debugger;
     loadModel();
     rendererRef.current.addGeneralEventListener();
   }, [source]);
