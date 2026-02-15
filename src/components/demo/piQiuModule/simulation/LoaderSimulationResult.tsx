@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as piqiu3d from "piqiu3d";
 import { Piqiu3DRenderer } from "../Piqiu3DRenderer";
+import CanvasLoadingOverlay from "../common/CanvasLoadingOverlay";
 
 type Props = {
   source?: string | File | null;
@@ -10,6 +11,7 @@ export default function CanvasContainer({ source }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<Piqiu3DRenderer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -63,6 +65,7 @@ export default function CanvasContainer({ source }: Props) {
     }
 
     const loadModel = async () => {
+      setIsLoading(true);
       try {
         const m = piqiuRenderer.model;
         if (m) {
@@ -87,6 +90,10 @@ export default function CanvasContainer({ source }: Props) {
         piqiuRenderer.updateCamera();
       } catch (e) {
         // ignore
+      } finally {
+        if (!canceled && rendererRef.current === piqiuRenderer) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -97,8 +104,9 @@ export default function CanvasContainer({ source }: Props) {
   }, [source]);
 
   return (
-    <div>
+    <div className="canvas-stage">
       <canvas ref={canvasRef} id="demo"></canvas>
+      <CanvasLoadingOverlay loading={isLoading} />
     </div>
   );
 }

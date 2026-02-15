@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as piqiu3d from "piqiu3d";
 import { Piqiu3DRenderer } from "./piQiuModule/Piqiu3DRenderer";
+import CanvasLoadingOverlay from "./piQiuModule/common/CanvasLoadingOverlay";
 
 type Props = {
   /** 可以传入本地 File，或者一个 URL 字符串；如果为空则使用默认模型 */
@@ -11,6 +12,7 @@ export default function CanvasContainer({ source }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<Piqiu3DRenderer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const loadVersionRef = useRef(0);
 
@@ -72,6 +74,7 @@ export default function CanvasContainer({ source }: Props) {
       const version = ++loadVersionRef.current;
       const loader = new piqiu3d.GLTFLoader();
       console.log("LoaderModel: start loading", src);
+      setIsLoading(true);
 
       try {
         const m = piqiuRenderer.model;
@@ -99,6 +102,14 @@ export default function CanvasContainer({ source }: Props) {
         piqiuRenderer.updateCamera();
       } catch (e) {
         // ignore
+      } finally {
+        if (
+          !canceled &&
+          rendererRef.current === piqiuRenderer &&
+          version === loadVersionRef.current
+        ) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -109,8 +120,9 @@ export default function CanvasContainer({ source }: Props) {
   }, [source]);
 
   return (
-    <div>
+    <div className="canvas-stage">
       <canvas ref={canvasRef} id="demo"></canvas>
+      <CanvasLoadingOverlay loading={isLoading} />
     </div>
   );
 }

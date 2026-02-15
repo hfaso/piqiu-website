@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as piqiu3d from "piqiu3d";
 import { Piqiu3DRenderer } from "../Piqiu3DRenderer";
+import CanvasLoadingOverlay from "../common/CanvasLoadingOverlay";
 
 type Props = {
   source?: string | File | null;
@@ -10,6 +11,7 @@ export default function CanvasContainer({ source }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<Piqiu3DRenderer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -23,6 +25,7 @@ export default function CanvasContainer({ source }: Props) {
       height: canvas.height,
     });
     rendererRef.current = piqiuRenderer;
+    piqiuRenderer.addGeneralEventListener();
 
     return () => {
       if (objectUrlRef.current) {
@@ -30,20 +33,20 @@ export default function CanvasContainer({ source }: Props) {
         objectUrlRef.current = null;
       }
       try {
-        piqiuRenderer.removeMouseEventListener();
+        piqiuRenderer.removeGeneralEventListener();
         piqiuRenderer.dispose();
       } catch (e) {
-        // 忽略清理错误
+        // ignore cleanup errors
       }
     };
   }, []);
 
-  // 当 source 改变时（包括首次挂载），加载模型
   useEffect(() => {
     if (!rendererRef.current) return;
+    const piqiuRenderer = rendererRef.current;
+    let canceled = false;
 
     let src: string;
-    // 清理上一个 object URL（如果有）
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
@@ -54,43 +57,51 @@ export default function CanvasContainer({ source }: Props) {
     } else if (typeof source === "string") {
       src = source;
     } else {
-      // File
       objectUrlRef.current = URL.createObjectURL(source);
       src = objectUrlRef.current;
     }
 
     const loadModel = async () => {
-      const piqiuRenderer = rendererRef.current!;
-
+      setIsLoading(true);
       try {
         const m = piqiuRenderer.model;
-        if (m) {
-          if (typeof m.clear === "function") {
-            m.clear();
-          }
+        if (m && typeof m.clear === "function") {
+          m.clear();
         }
       } catch (e) {
         // ignore
       }
 
-      const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
-      const { database } = new piqiu3d.LoadDataBase(data, "mesh");
-      const res = {
-        ...data,
-        database,
-        ArrayBuffer,
-      };
-      piqiuRenderer.loadSiumlationFile(res);
-      piqiuRenderer.updateCamera();
+      try {
+        const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
+        if (canceled || rendererRef.current !== piqiuRenderer) return;
+        const { database } = new piqiu3d.LoadDataBase(data, "mesh");
+        const res = {
+          ...data,
+          database,
+          ArrayBuffer,
+        };
+        piqiuRenderer.loadSiumlationFile(res);
+        piqiuRenderer.updateCamera();
+      } catch (e) {
+        // ignore
+      } finally {
+        if (!canceled && rendererRef.current === piqiuRenderer) {
+          setIsLoading(false);
+        }
+      }
     };
 
-    loadModel();
-    rendererRef.current.addGeneralEventListener();
+    void loadModel();
+    return () => {
+      canceled = true;
+    };
   }, [source]);
 
   return (
-    <div>
+    <div className="canvas-stage">
       <canvas ref={canvasRef} id="demo"></canvas>
+      <CanvasLoadingOverlay loading={isLoading} />
     </div>
   );
 }
