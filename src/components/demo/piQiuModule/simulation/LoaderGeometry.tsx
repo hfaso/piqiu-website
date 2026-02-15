@@ -23,6 +23,7 @@ export default function CanvasContainer({ source }: Props) {
       height: canvas.height,
     });
     rendererRef.current = piqiuRenderer;
+    piqiuRenderer.addGeneralEventListener();
 
     return () => {
       if (objectUrlRef.current) {
@@ -30,7 +31,7 @@ export default function CanvasContainer({ source }: Props) {
         objectUrlRef.current = null;
       }
       try {
-        piqiuRenderer.removeMouseEventListener();
+        piqiuRenderer.removeGeneralEventListener();
         piqiuRenderer.dispose();
       } catch (e) {
         // 忽略清理错误
@@ -41,6 +42,8 @@ export default function CanvasContainer({ source }: Props) {
   // 当 source 改变时（包括首次挂载），加载模型
   useEffect(() => {
     if (!rendererRef.current) return;
+    const piqiuRenderer = rendererRef.current;
+    let canceled = false;
 
     let src: string;
     // 清理上一个 object URL（如果有）
@@ -60,8 +63,6 @@ export default function CanvasContainer({ source }: Props) {
     }
 
     const loadModel = async () => {
-      const piqiuRenderer = rendererRef.current!;
-
       try {
         const m = piqiuRenderer.model;
         if (m) {
@@ -73,19 +74,26 @@ export default function CanvasContainer({ source }: Props) {
         // ignore
       }
 
-      const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
-      const { database } = new piqiu3d.LoadDataBase(data, "surface");
-      const res = {
-        ...data,
-        database,
-        ArrayBuffer,
-      };
-      piqiuRenderer.loadSiumlationFile(res);
-      piqiuRenderer.updateCamera();
+      try {
+        const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
+        if (canceled || rendererRef.current !== piqiuRenderer) return;
+        const { database } = new piqiu3d.LoadDataBase(data, "surface");
+        const res = {
+          ...data,
+          database,
+          ArrayBuffer,
+        };
+        piqiuRenderer.loadSiumlationFile(res);
+        piqiuRenderer.updateCamera();
+      } catch (e) {
+        // ignore
+      }
     };
 
-    loadModel();
-    rendererRef.current.addGeneralEventListener();
+    void loadModel();
+    return () => {
+      canceled = true;
+    };
   }, [source]);
 
   return (

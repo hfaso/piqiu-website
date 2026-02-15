@@ -27,6 +27,7 @@ export default function CanvasContainer({ source }: Props) {
       height: canvas.height,
     });
     rendererRef.current = piqiuRenderer;
+    piqiuRenderer.addGeneralEventListener();
 
     // 卸载时清理
     return () => {
@@ -36,7 +37,7 @@ export default function CanvasContainer({ source }: Props) {
         objectUrlRef.current = null;
       }
       try {
-        piqiuRenderer.removeMouseEventListener();
+        piqiuRenderer.removeGeneralEventListener();
         piqiuRenderer.dispose();
       } catch (e) {
         // 忽略清理错误
@@ -47,6 +48,8 @@ export default function CanvasContainer({ source }: Props) {
   // 当 source 改变时（包括首次挂载），加载模型
   useEffect(() => {
     if (!rendererRef.current) return;
+    const piqiuRenderer = rendererRef.current;
+    let canceled = false;
 
     let src: string;
     // 清理上一个 object URL（如果有）
@@ -66,7 +69,6 @@ export default function CanvasContainer({ source }: Props) {
     }
 
     const loadModel = async () => {
-      const piqiuRenderer = rendererRef.current!;
       const version = ++loadVersionRef.current;
       const loader = new piqiu3d.GLTFLoader();
       console.log("LoaderModel: start loading", src);
@@ -82,16 +84,28 @@ export default function CanvasContainer({ source }: Props) {
         // ignore
       }
 
-      const meshes = await loader.load(piqiuRenderer.renderContext, src);
-      if (version !== loadVersionRef.current) return;
-      for (const mesh of meshes) {
-        piqiuRenderer.addPart(mesh);
+      try {
+        const meshes = await loader.load(piqiuRenderer.renderContext, src);
+        if (
+          canceled ||
+          rendererRef.current !== piqiuRenderer ||
+          version !== loadVersionRef.current
+        ) {
+          return;
+        }
+        for (const mesh of meshes) {
+          piqiuRenderer.addPart(mesh);
+        }
+        piqiuRenderer.updateCamera();
+      } catch (e) {
+        // ignore
       }
-      piqiuRenderer.updateCamera();
     };
 
-    loadModel();
-    rendererRef.current.addGeneralEventListener();
+    void loadModel();
+    return () => {
+      canceled = true;
+    };
   }, [source]);
 
   return (

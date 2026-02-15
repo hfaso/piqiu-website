@@ -11,6 +11,22 @@ export class Piqiu3DRenderer {
   public mouseHandler: any;
   public dpr = window.devicePixelRatio || 1;
   public _boundingBox: piqiu3d.BoundingBox | undefined;
+  private readonly handleWheel = (event: WheelEvent): void => {
+    const action = new piqiu3d.WheelZoomTool(this.builtInUniforms);
+    const current = vec2.fromValues(
+      event.offsetX * this.dpr,
+      event.offsetY * this.dpr,
+    );
+    action.update(current, event.deltaY < 0 ? 1.1 : 1 / 1.1);
+    this.scene.render();
+  };
+  private readonly handleResize = (): void => {
+    this.canvas.width = window.innerWidth / 2;
+    this.canvas.height = window.innerHeight / 2;
+
+    this.scene.size = [this.canvas.width, this.canvas.height];
+    this.scene.render();
+  };
   // 可以按需暴露其他属性，如模型、内置uniforms等
   public get model() {
     return this.renderPass.model;
@@ -172,29 +188,11 @@ export class Piqiu3DRenderer {
   }
 
   addMouseWheelEventListener() {
-    this.canvas.addEventListener(
-      "wheel",
-      (event: WheelEvent): void => {
-        const action = new piqiu3d.WheelZoomTool(this.builtInUniforms);
-        const current = vec2.fromValues(
-          event.offsetX * this.dpr,
-          event.offsetY * this.dpr,
-        );
-        action.update(current, event.deltaY < 0 ? 1.1 : 1 / 1.1);
-        this.scene.render();
-      },
-      false,
-    );
+    this.canvas.addEventListener("wheel", this.handleWheel, false);
   }
 
   addWindowResizeListener() {
-    window.addEventListener("resize", () => {
-      this.canvas.width = window.innerWidth / 2;
-      this.canvas.height = window.innerHeight / 2;
-
-      this.scene.size = [this.canvas.width, this.canvas.height];
-      this.scene.render();
-    });
+    window.addEventListener("resize", this.handleResize);
   }
 
   // 更新相机位置以适应当前场景
@@ -223,6 +221,20 @@ export class Piqiu3DRenderer {
 
   removeMouseEventListener() {
     this.mouseHandler.unbindEvents(this.canvas);
+  }
+
+  removeMouseWheelEventListener() {
+    this.canvas.removeEventListener("wheel", this.handleWheel, false);
+  }
+
+  removeWindowResizeListener() {
+    window.removeEventListener("resize", this.handleResize);
+  }
+
+  removeGeneralEventListener() {
+    this.removeMouseEventListener();
+    this.removeMouseWheelEventListener();
+    this.removeWindowResizeListener();
   }
 
   /**
