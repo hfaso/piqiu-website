@@ -95,6 +95,7 @@ export class Piqiu3DRenderer {
     data?: piqiu3d.LoadDataBase,
     options?: {
       color?: [number, number, number];
+      scalarSelect?: [number, number];
     },
   ) {
     const loaderDataModel = get(data, "database.model") as
@@ -152,6 +153,9 @@ export class Piqiu3DRenderer {
           const _postData = new piqiu3d.PostDataDrawable({
             buffer,
           });
+          if (options?.scalarSelect && options.scalarSelect.length >= 2) {
+            _postData.setScalarByScalarIndex(options?.scalarSelect);
+          }
           _postData.transform = partsData.transform;
           partsData.DrawableDataList.push(_postData);
         }
