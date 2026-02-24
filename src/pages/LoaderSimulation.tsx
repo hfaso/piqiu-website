@@ -55,6 +55,33 @@ function LoaderSimulation() {
   // 获取当前 case 类型（从 URL 参数或路由）
   const caseId = searchParams.get("case") || "geometry";
   const currentCase = cases[caseId] || cases["geometry"];
+  const descKeyByLoaderType: Record<CaseItem["loaderType"], string> = {
+    geometry: "loaderGeoModel.desc",
+    mesh: "loaderMeshModel.desc",
+    simulation: "loaderSimulationResultModel.desc",
+  };
+  const subDescKeysByLoaderType: Record<CaseItem["loaderType"], string[]> = {
+    geometry: [
+      "loaderGeoModel.subdesc1",
+      "loaderGeoModel.subdesc2",
+      "loaderGeoModel.subdesc3",
+    ],
+    mesh: [
+      "loaderMeshModel.subdesc1",
+      "loaderMeshModel.subdesc2",
+      "loaderMeshModel.subdesc3",
+    ],
+    simulation: [
+      "loaderSimulationResultModel.subdesc1",
+      "loaderSimulationResultModel.subdesc2",
+      "loaderSimulationResultModel.subdesc3",
+    ],
+  };
+  const currentDescKey =
+    descKeyByLoaderType[currentCase.loaderType] || "loaderGeoModel.desc";
+  const currentSubDescKeys =
+    subDescKeysByLoaderType[currentCase.loaderType] ||
+    subDescKeysByLoaderType.geometry;
 
   console.log(currentCase.loaderType);
 
@@ -120,11 +147,11 @@ function LoaderSimulation() {
 
       {/* 案例说明区域 */}
       <div className="case-description">
-        <p>{t("loaderGeoModel.desc")}</p>
+        <p>{t(currentDescKey)}</p>
         <ul>
-          <li>{t("basics.controls.rotate")}</li>
-          <li>{t("basics.controls.zoom")}</li>
-          <li>{t("basics.controls.pan")}</li>
+          {currentSubDescKeys.map((subDescKey) => (
+            <li key={subDescKey}>{t(subDescKey)}</li>
+          ))}
         </ul>
       </div>
     </div>
