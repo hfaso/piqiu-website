@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import * as piqiu3d from "piqiu3d";
-import { Piqiu3DRenderer } from "../Piqiu3DRenderer";
+import { Piqiu3DRenderer, type RenderMode } from "../Piqiu3DRenderer";
 import CanvasLoadingOverlay from "../common/CanvasLoadingOverlay";
 
 type Props = {
@@ -61,6 +61,9 @@ export default function CanvasContainer({ source }: Props) {
   const [scalarOptions, setScalarOptions] = useState<ScalarOption[]>([]);
   const [selectedScalarIndex, setSelectedScalarIndex] = useState(0);
   const [selectedSubScalarIndex, setSelectedSubScalarIndex] = useState(0);
+  const [renderMode, setRenderMode] = useState<RenderMode>(
+    "surface_with_wireframe",
+  );
 
   const selectedScalar = useMemo(() => {
     return (
@@ -75,6 +78,7 @@ export default function CanvasContainer({ source }: Props) {
     scalarIndex: number,
     subScalarIndex: number,
     resetCamera = false,
+    modeOverride?: RenderMode,
   ) => {
     const piqiuRenderer = rendererRef.current;
     const simulationData = simulationDataRef.current;
@@ -91,6 +95,7 @@ export default function CanvasContainer({ source }: Props) {
 
     piqiuRenderer.loadSiumlationFile(simulationData, {
       scalarSelect: [scalarIndex, subScalarIndex],
+      renderMode: modeOverride || renderMode,
     });
 
     if (resetCamera) {
@@ -203,6 +208,27 @@ export default function CanvasContainer({ source }: Props) {
     applyScalarSelection(selectedScalarIndex, nextSubScalarIndex);
   };
 
+  const onRenderModeChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextRenderMode = event.target.value as RenderMode;
+    setRenderMode(nextRenderMode);
+
+    const nextScalar =
+      scalarOptions.find((item) => item.scalarIndex === selectedScalarIndex) ||
+      scalarOptions[0];
+    const nextSubScalarIndex =
+      nextScalar?.components.find(
+        (item) => item.subIndex === selectedSubScalarIndex,
+      )?.subIndex ??
+      nextScalar?.components[0]?.subIndex ??
+      0;
+    applyScalarSelection(
+      selectedScalarIndex,
+      nextSubScalarIndex,
+      false,
+      nextRenderMode,
+    );
+  };
+
   return (
     <div>
       {scalarOptions.length > 0 && (
@@ -237,6 +263,17 @@ export default function CanvasContainer({ source }: Props) {
                   {item.componentName}
                 </option>
               ))}
+            </select>
+          </label>
+
+          <label>
+            <span style={{ marginRight: 6 }}>Render Mode</span>
+            <select value={renderMode} onChange={onRenderModeChange}>
+              <option value="wireframe">Wireframe</option>
+              <option value="surface_with_wireframe">
+                Surface + Wireframe
+              </option>
+              <option value="surface">Surface</option>
             </select>
           </label>
         </div>

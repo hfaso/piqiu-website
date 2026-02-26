@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import * as piqiu3d from "piqiu3d";
-import { Piqiu3DRenderer } from "../Piqiu3DRenderer";
+import { Piqiu3DRenderer, type RenderMode } from "../Piqiu3DRenderer";
 import CanvasLoadingOverlay from "../common/CanvasLoadingOverlay";
 
 type Props = {
@@ -12,6 +12,7 @@ export default function CanvasContainer({ source }: Props) {
   const rendererRef = useRef<Piqiu3DRenderer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [renderMode, setRenderMode] = useState<RenderMode>("surface_with_wireframe");
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -36,19 +37,17 @@ export default function CanvasContainer({ source }: Props) {
         piqiuRenderer.removeGeneralEventListener();
         piqiuRenderer.dispose();
       } catch (e) {
-        // 忽略清理错误
+        // ignore cleanup errors
       }
     };
   }, []);
 
-  // 当 source 改变时（包括首次挂载），加载模型
   useEffect(() => {
     if (!rendererRef.current) return;
     const piqiuRenderer = rendererRef.current;
     let canceled = false;
 
     let src: string;
-    // 清理上一个 object URL（如果有）
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
@@ -59,7 +58,6 @@ export default function CanvasContainer({ source }: Props) {
     } else if (typeof source === "string") {
       src = source;
     } else {
-      // File
       objectUrlRef.current = URL.createObjectURL(source);
       src = objectUrlRef.current;
     }
@@ -68,10 +66,8 @@ export default function CanvasContainer({ source }: Props) {
       setIsLoading(true);
       try {
         const m = piqiuRenderer.model;
-        if (m) {
-          if (typeof m.clear === "function") {
-            m.clear();
-          }
+        if (m && typeof m.clear === "function") {
+          m.clear();
         }
       } catch (e) {
         // ignore
@@ -86,7 +82,7 @@ export default function CanvasContainer({ source }: Props) {
           database,
           ArrayBuffer,
         };
-        piqiuRenderer.loadSiumlationFile(res);
+        piqiuRenderer.loadSiumlationFile(res, { renderMode });
         piqiuRenderer.updateCamera();
       } catch (e) {
         // ignore
@@ -101,12 +97,29 @@ export default function CanvasContainer({ source }: Props) {
     return () => {
       canceled = true;
     };
-  }, [source]);
+  }, [source, renderMode]);
+
+  const onRenderModeChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setRenderMode(event.target.value as RenderMode);
+  };
 
   return (
-    <div className="canvas-stage">
-      <canvas ref={canvasRef} id="demo"></canvas>
-      <CanvasLoadingOverlay loading={isLoading} />
+    <div>
+      <div style={{ marginBottom: 10 }}>
+        <label>
+          <span style={{ marginRight: 6 }}>Render Mode</span>
+          <select value={renderMode} onChange={onRenderModeChange}>
+            <option value="wireframe">Wireframe</option>
+            <option value="surface_with_wireframe">Surface + Wireframe</option>
+            <option value="surface">Surface</option>
+          </select>
+        </label>
+      </div>
+      <div className="canvas-stage">
+        <canvas ref={canvasRef} id="demo"></canvas>
+        <CanvasLoadingOverlay loading={isLoading} />
+      </div>
     </div>
   );
 }
+

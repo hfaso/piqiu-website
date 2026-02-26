@@ -2435,9 +2435,9 @@ picomatch@^4.0.3:
   resolved "https://registry.npmjs.org/picomatch/-/picomatch-4.0.3.tgz"
   integrity sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==
 
-"piqiu3d@git+ssh://git@github.com/hfaso/piqiu3d.git#v0.1.7":
-  version "0.1.7"
-  resolved "git+ssh://git@github.com/hfaso/piqiu3d.git#4f89bad5e2295c3363b1f217191092444c5e2599"
+"piqiu3d@git+ssh://git@github.com/hfaso/piqiu3d.git#v0.1.8":
+  version "0.1.8"
+  resolved "git+ssh://git@github.com/hfaso/piqiu3d.git#08ade509b28c485108f0c2c37012477cd9393a9d"
   dependencies:
     axios "^1.2.1"
     earcut "^2.2.4"

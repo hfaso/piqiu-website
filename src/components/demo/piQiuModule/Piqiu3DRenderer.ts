@@ -3,6 +3,8 @@ import { get } from "lodash";
 import { useMouseHandler } from "./handler/MouseHandler";
 import { vec2, vec3 } from "gl-matrix";
 
+export type RenderMode = "wireframe" | "surface_with_wireframe" | "surface";
+
 export class Piqiu3DRenderer {
   private canvas: HTMLCanvasElement;
   public renderContext: piqiu3d.RenderContext;
@@ -96,6 +98,7 @@ export class Piqiu3DRenderer {
     options?: {
       color?: [number, number, number];
       scalarSelect?: [number, number];
+      renderMode?: RenderMode;
     },
   ) {
     const loaderDataModel = get(data, "database.model") as
@@ -116,13 +119,16 @@ export class Piqiu3DRenderer {
           if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.FACE) {
             const _geoData = new piqiu3d.GeoDataDrawable({ buffer }, options);
             _geoData.geoType = piqiu3d.DRAW.surface;
+            _geoData.visible = options?.renderMode !== "wireframe";
             _geoData.transform = partsData.transform;
             partsData.DrawableDataList.push(_geoData);
             partsData.id = _geoData.buffer.geomid;
           }
           if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.EDGE) {
             const _geoData = new piqiu3d.GeoDataDrawable({ buffer });
-            _geoData.visible = false;
+            _geoData.visible =
+              options?.renderMode === "wireframe" ||
+              options?.renderMode === "surface_with_wireframe";
             _geoData.fboType = piqiu3d.FBOType.line;
             _geoData.color = piqiu3d.defaultLineColor;
             _geoData.geoType = piqiu3d.DRAW.wire;
@@ -144,6 +150,13 @@ export class Piqiu3DRenderer {
         }
         if (buffer instanceof piqiu3d.MeshDataBuffer) {
           const _meshData = new piqiu3d.MeshDataDrawable({ buffer });
+          if (options?.renderMode === "wireframe") {
+            _meshData.draw = [piqiu3d.DRAW.edge];
+          } else if (options?.renderMode === "surface") {
+            _meshData.draw = [piqiu3d.DRAW.surface];
+          } else {
+            _meshData.draw = [piqiu3d.DRAW.surface, piqiu3d.DRAW.edge];
+          }
           _meshData.transform = partsData.transform;
           _meshData.visible = true;
           partsData.DrawableDataList.push(_meshData);
@@ -155,6 +168,13 @@ export class Piqiu3DRenderer {
           });
           if (options?.scalarSelect && options.scalarSelect.length >= 2) {
             _postData.setScalarByScalarIndex(options?.scalarSelect);
+          }
+          if (options?.renderMode === "wireframe") {
+            _postData.draw = [piqiu3d.DRAW.edge];
+          } else if (options?.renderMode === "surface") {
+            _postData.draw = [piqiu3d.DRAW.post];
+          } else {
+            _postData.draw = [piqiu3d.DRAW.post, piqiu3d.DRAW.edge];
           }
           _postData.transform = partsData.transform;
           partsData.DrawableDataList.push(_postData);
