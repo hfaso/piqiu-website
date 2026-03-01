@@ -4,6 +4,12 @@ import { useMouseHandler } from "./handler/MouseHandler";
 import { vec2, vec3 } from "gl-matrix";
 
 export type RenderMode = "wireframe" | "surface_with_wireframe" | "surface";
+export type PartNode = {
+  index: number;
+  id: string;
+  name: string;
+  visible: boolean;
+};
 
 export class Piqiu3DRenderer {
   private canvas: HTMLCanvasElement;
@@ -23,8 +29,8 @@ export class Piqiu3DRenderer {
     this.scene.render();
   };
   private readonly handleResize = (): void => {
-    this.canvas.width = window.innerWidth / 2;
-    this.canvas.height = window.innerHeight / 2;
+    this.canvas.width = window.innerWidth * 0.65;
+    this.canvas.height = window.innerHeight * 0.65;
 
     this.scene.size = [this.canvas.width, this.canvas.height];
     this.scene.render();
@@ -85,6 +91,43 @@ export class Piqiu3DRenderer {
     this.model.add(part);
   }
 
+  private getTopLevelParts(): piqiu3d.Part[] {
+    const parts: piqiu3d.Part[] = [];
+    this.model.forEach((node) => {
+      if (node instanceof piqiu3d.Part) {
+        parts.push(node);
+      }
+    });
+    return parts;
+  }
+
+  getPartTree(): PartNode[] {
+    return this.getTopLevelParts().map((part, index) => ({
+      index,
+      id: String(part.id || `part-${index}`),
+      name: part.name || `Part ${index + 1}`,
+      visible: !!part.visible,
+    }));
+  }
+
+  setPartVisible(index: number, visible: boolean): boolean {
+    const part = this.getTopLevelParts()[index];
+    if (!part) return false;
+    part.visible = visible;
+    this.model.update();
+    this.scene.render();
+    return true;
+  }
+
+  setAllPartsVisible(visible: boolean): void {
+    const parts = this.getTopLevelParts();
+    parts.forEach((part) => {
+      part.visible = visible;
+    });
+    this.model.update();
+    this.scene.render();
+  }
+
   get boundingBox() {
     return this._boundingBox;
   }
@@ -110,6 +153,8 @@ export class Piqiu3DRenderer {
       return;
     }
     const { partBuffer } = loaderDataModel;
+    const partBySource = new WeakMap<object, piqiu3d.Part>();
+    let createdPartCount = 0;
 
     for (let i = 0; i < partBuffer.length; i++) {
       const partDataBuffer = partBuffer[i];
@@ -180,10 +225,27 @@ export class Piqiu3DRenderer {
           partsData.DrawableDataList.push(_postData);
         }
       });
-      const part = new piqiu3d.Part();
+      const source = get(partDataBuffer, "json");
+      const sourceObject =
+        source && typeof source === "object"
+          ? (source as object)
+          : undefined;
+      let part = sourceObject ? partBySource.get(sourceObject) : undefined;
+      if (!part) {
+        part = new piqiu3d.Part();
+        const sourceName = String(get(source, "name", "") || "").trim();
+        const sourceId =
+          get(source, "id") ?? get(source, "geomid") ?? `part-${i}`;
+        part.name = sourceName || `Part ${createdPartCount + 1}`;
+        part.id = String(sourceId);
+        if (sourceObject) {
+          partBySource.set(sourceObject, part);
+        }
+        this.addPart(part);
+        createdPartCount++;
+      }
       partsData.addDrawablesToPart(part);
-      this.addPart(part);
-      console.log("loading part", i, "/", partBuffer.length);
+      console.log("loading part drawable", i, "/", partBuffer.length);
     }
     this.boundingBox = new piqiu3d.BoundingBox(
       vec3.fromValues(

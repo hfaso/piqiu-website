@@ -11,8 +11,8 @@ export default function CanvasContainer() {
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    canvas.width = window.innerWidth * 0.5;
-    canvas.height = window.innerHeight * 0.5;
+    canvas.width = window.innerWidth * 0.65;
+    canvas.height = window.innerHeight * 0.65;
 
     const piqiuRenderer = new Piqiu3DRenderer(canvas, {
       width: canvas.width,
