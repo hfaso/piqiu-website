@@ -6,8 +6,8 @@
   --g-spacing-lg: var(--spacing-lg, 2rem);
   --g-spacing-xl: var(--spacing-xl, 3rem);
   --g-radius: var(--border-radius-lg, 15px);
-  --g-primary: var(--color-primary, #6495ed);
-  --g-shadow: var(--shadow-medium, 0 4px 20px rgba(0, 0, 0, 0.2));
+  --g-primary: var(--color-primary, #3b82f6);
+  --g-shadow: var(--shadow-medium, 0 12px 28px rgba(37, 99, 235, 0.12));
 }
 
 .gallery-container {
@@ -31,11 +31,11 @@
 }
 
 .gallery-container .case-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(10px);
   border-radius: var(--g-radius);
   padding: var(--g-spacing-lg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.28);
   transition: all 0.3s ease;
   cursor: pointer;
 }
@@ -58,7 +58,7 @@
 }
 
 .gallery-container .case-card p {
-  color: var(--color-text-secondary, #ccc);
+  color: var(--color-text-secondary, #475569);
   font-size: 0.9rem;
 }
 
@@ -70,28 +70,29 @@
 }
 
 .gallery-container .tech-tag {
-  background: rgba(100, 149, 237, 0.2);
+  background: rgba(59, 130, 246, 0.14);
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 0.8em;
-  border: 1px solid rgba(100, 149, 237, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  color: #1e3a8a;
 }
 
 .gallery-container .nav-link {
   display: inline-flex;
   align-items: center;
   padding: 10px 24px;
-  background: rgba(100, 149, 237, 0.1);
+  background: rgba(59, 130, 246, 0.1);
   color: var(--g-primary);
   text-decoration: none;
   border-radius: 25px;
-  border: 1px solid rgba(100, 149, 237, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.28);
   transition: all 0.3s ease;
   margin-top: var(--g-spacing-md);
 }
 
 .gallery-container .nav-link:hover {
-  background: rgba(100, 149, 237, 0.2);
+  background: rgba(59, 130, 246, 0.16);
   transform: translateY(-2px);
 }
 
@@ -103,7 +104,7 @@
   border-radius: 8px;
   overflow: hidden;
   margin: 0 auto var(--g-spacing-md);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(226, 232, 240, 0.7);
 }
 
 .case-card-thumbnail img {
@@ -123,8 +124,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--g-spacing-sm);
-  background: linear-gradient(145deg, rgba(100, 149, 237, 0.15) 0%, rgba(30, 30, 50, 0.4) 100%);
-  color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.15) 0%, rgba(226, 232, 240, 0.85) 100%);
+  color: rgba(71, 85, 105, 0.9);
 }
 
 .case-card-thumbnail-placeholder .thumbnail-icon {

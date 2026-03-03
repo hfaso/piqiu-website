@@ -5,9 +5,9 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(15, 15, 35, 0.95);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
 }
 
 .header-container {
@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   text-decoration: none;
-  color: white;
+  color: #0f172a;
   font-weight: bold;
   font-size: 1.2em;
 }
@@ -54,11 +54,11 @@
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(6px);
-  color: #cccccc;
+  color: #64748b;
   user-select: none;
   white-space: nowrap;
 }
@@ -80,7 +80,7 @@
 }
 
 .lang-option:hover {
-  color: #ffffff;
+  color: #0f172a;
 }
 
 .lang-option.active {
@@ -102,7 +102,7 @@
   align-items: center;
   padding: 10px 20px;
   text-decoration: none;
-  color: #cccccc;
+  color: #475569;
   border-radius: 25px;
   transition: all 0.3s ease;
   position: relative;
@@ -126,8 +126,8 @@
 
 .nav-link:hover,
 .nav-link.active {
-  background: rgba(100, 149, 237, 0.1);
-  color: #6495ed;
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
   transform: translateY(-2px);
 }
 
@@ -149,7 +149,7 @@
 .mobile-menu-button span {
   width: 25px;
   height: 3px;
-  background: white;
+  background: #334155;
   margin: 3px 0;
   transition: 0.3s;
   border-radius: 2px;
@@ -159,8 +159,8 @@
 .mobile-nav {
   display: none;
   flex-direction: column;
-  background: rgba(15, 15, 35, 0.98);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.96);
+  border-top: 1px solid rgba(148, 163, 184, 0.24);
 }
 
 .mobile-nav.open {
@@ -172,15 +172,15 @@
   align-items: center;
   padding: 15px 20px;
   text-decoration: none;
-  color: #cccccc;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #475569;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
   transition: background 0.3s ease;
 }
 
 .mobile-nav-link:hover,
 .mobile-nav-link.active {
-  background: rgba(100, 149, 237, 0.1);
-  color: #6495ed;
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
 }
 
 /* 响应式设计 */

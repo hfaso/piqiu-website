@@ -105,15 +105,17 @@ export default function CanvasContainer({ source }: Props) {
 
   return (
     <div>
-      <div style={{ marginBottom: 10 }}>
-        <label>
-          <span style={{ marginRight: 6 }}>Render Mode</span>
-          <select value={renderMode} onChange={onRenderModeChange}>
-            <option value="wireframe">Wireframe</option>
-            <option value="surface_with_wireframe">Surface + Wireframe</option>
-            <option value="surface">Surface</option>
-          </select>
-        </label>
+      <div style={{ marginBottom: 10, width: "min(65vw, 100%)", marginInline: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "flex-start", textAlign: "left" }}>
+          <label>
+            <span style={{ marginRight: 6 }}>Render Mode</span>
+            <select value={renderMode} onChange={onRenderModeChange}>
+              <option value="wireframe">Wireframe</option>
+              <option value="surface_with_wireframe">Surface + Wireframe</option>
+              <option value="surface">Surface</option>
+            </select>
+          </label>
+        </div>
       </div>
       <div className="canvas-stage">
         <canvas ref={canvasRef} id="demo"></canvas>

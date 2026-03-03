@@ -96,13 +96,15 @@ function LoaderSimulation() {
       <h2 className="basics-title">{currentCase.title}</h2>
 
       {/* 文件选择：支持 .gltf/.glb 本地文件，未选择时使用默认模型 */}
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 12, width: "min(65vw, 100%)", marginInline: "auto" }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: 10,
             flexWrap: "wrap",
+            justifyContent: "flex-start",
+            textAlign: "left",
           }}
         >
           <span>{t("loaderModel.chooseLocal")}</span>

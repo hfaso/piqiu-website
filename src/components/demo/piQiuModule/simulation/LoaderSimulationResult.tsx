@@ -232,50 +232,53 @@ export default function CanvasContainer({ source }: Props) {
   return (
     <div>
       {scalarOptions.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            alignItems: "center",
-            flexWrap: "wrap",
-            marginBottom: 10,
-          }}
-        >
-          <label>
-            <span style={{ marginRight: 6 }}>Scalar</span>
-            <select value={selectedScalarIndex} onChange={onScalarChange}>
-              {scalarOptions.map((item) => (
-                <option key={item.scalarIndex} value={item.scalarIndex}>
-                  {item.scalarName}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div style={{ marginBottom: 10, width: "min(65vw, 100%)", marginInline: "auto" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              flexWrap: "wrap",
+              justifyContent: "flex-start",
+              textAlign: "left",
+            }}
+          >
+            <label>
+              <span style={{ marginRight: 6 }}>Scalar</span>
+              <select value={selectedScalarIndex} onChange={onScalarChange}>
+                {scalarOptions.map((item) => (
+                  <option key={item.scalarIndex} value={item.scalarIndex}>
+                    {item.scalarName}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label>
-            <span style={{ marginRight: 6 }}>Component</span>
-            <select value={selectedSubScalarIndex} onChange={onSubScalarChange}>
-              {subScalarOptions.map((item) => (
-                <option
-                  key={`${item.subIndex}-${item.componentName}`}
-                  value={item.subIndex}
-                >
-                  {item.componentName}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label>
+              <span style={{ marginRight: 6 }}>Component</span>
+              <select value={selectedSubScalarIndex} onChange={onSubScalarChange}>
+                {subScalarOptions.map((item) => (
+                  <option
+                    key={`${item.subIndex}-${item.componentName}`}
+                    value={item.subIndex}
+                  >
+                    {item.componentName}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label>
-            <span style={{ marginRight: 6 }}>Render Mode</span>
-            <select value={renderMode} onChange={onRenderModeChange}>
-              <option value="wireframe">Wireframe</option>
-              <option value="surface_with_wireframe">
-                Surface + Wireframe
-              </option>
-              <option value="surface">Surface</option>
-            </select>
-          </label>
+            <label>
+              <span style={{ marginRight: 6 }}>Render Mode</span>
+              <select value={renderMode} onChange={onRenderModeChange}>
+                <option value="wireframe">Wireframe</option>
+                <option value="surface_with_wireframe">
+                  Surface + Wireframe
+                </option>
+                <option value="surface">Surface</option>
+              </select>
+            </label>
+          </div>
         </div>
       )}
 
