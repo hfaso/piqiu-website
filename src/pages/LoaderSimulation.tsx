@@ -2,6 +2,7 @@ import "./LoaderSimulation.css";
 import LoaderGeometryDemo from "../components/demo/piQiuModule/simulation/LoaderGeometry";
 import LoaderMeshDemo from "../components/demo/piQiuModule/simulation/LoaderMesh";
 import LoaderSimulationResultDemo from "../components/demo/piQiuModule/simulation/LoaderSimulationResult";
+import LoaderSimulationFramesResultDemo from "../components/demo/piQiuModule/simulation/LoaderSimulationFramesResult";
 import React, { useRef, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -12,7 +13,7 @@ interface CaseItem {
   desc: string;
   tags: string[];
   route: string;
-  loaderType: "geometry" | "mesh" | "simulation";
+  loaderType: "geometry" | "mesh" | "simulation" | "simulationFrames";
 }
 
 function LoaderSimulation() {
@@ -48,6 +49,14 @@ function LoaderSimulation() {
         route: "/loaderSimulationResult",
         loaderType: "simulation",
       },
+      simulationFrames: {
+        id: "simulationFrames",
+        title: t("gallery.cases.simulationFrames.title"),
+        desc: t("gallery.cases.simulationFrames.desc"),
+        tags: ["Simulation", "Frames"],
+        route: "/loaderSimulation?case=simulationFrames",
+        loaderType: "simulationFrames",
+      },
     }),
     [t],
   );
@@ -59,6 +68,7 @@ function LoaderSimulation() {
     geometry: "loaderGeoModel.desc",
     mesh: "loaderMeshModel.desc",
     simulation: "loaderSimulationResultModel.desc",
+    simulationFrames: "loaderSimulationFramesResultModel.desc",
   };
   const subDescKeysByLoaderType: Record<CaseItem["loaderType"], string[]> = {
     geometry: [
@@ -75,6 +85,11 @@ function LoaderSimulation() {
       "loaderSimulationResultModel.subdesc1",
       "loaderSimulationResultModel.subdesc2",
       "loaderSimulationResultModel.subdesc3",
+    ],
+    simulationFrames: [
+      "loaderSimulationFramesResultModel.subdesc1",
+      "loaderSimulationFramesResultModel.subdesc2",
+      "loaderSimulationFramesResultModel.subdesc3",
     ],
   };
   const currentDescKey =
@@ -145,6 +160,9 @@ function LoaderSimulation() {
       {currentCase.loaderType === "mesh" && <LoaderMeshDemo source={file} />}
       {currentCase.loaderType === "simulation" && (
         <LoaderSimulationResultDemo source={file} />
+      )}
+      {currentCase.loaderType === "simulationFrames" && (
+        <LoaderSimulationFramesResultDemo source={file} />
       )}
 
       {/* 案例说明区域 */}

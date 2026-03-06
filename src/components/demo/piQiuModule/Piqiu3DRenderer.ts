@@ -141,6 +141,7 @@ export class Piqiu3DRenderer {
     options?: {
       color?: [number, number, number];
       scalarSelect?: [number, number];
+      frameIndex?: number;
       renderMode?: RenderMode;
     },
   ) {
@@ -212,7 +213,14 @@ export class Piqiu3DRenderer {
             buffer,
           });
           if (options?.scalarSelect && options.scalarSelect.length >= 2) {
-            _postData.setScalarByScalarIndex(options?.scalarSelect);
+            if (options?.frameIndex !== undefined) {
+              _postData.setScalarByScalarIndex(
+                options?.scalarSelect,
+                options.frameIndex,
+              );
+            } else {
+              _postData.setScalarByScalarIndex(options?.scalarSelect);
+            }
           }
           if (options?.renderMode === "wireframe") {
             _postData.draw = [piqiu3d.DRAW.edge];
@@ -227,9 +235,7 @@ export class Piqiu3DRenderer {
       });
       const source = get(partDataBuffer, "json");
       const sourceObject =
-        source && typeof source === "object"
-          ? (source as object)
-          : undefined;
+        source && typeof source === "object" ? (source as object) : undefined;
       let part = sourceObject ? partBySource.get(sourceObject) : undefined;
       if (!part) {
         part = new piqiu3d.Part();

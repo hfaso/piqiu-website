@@ -71,6 +71,10 @@
         "title": "SimulationResult Rendering",
         "desc": "Examples of simulating simulationResult with optimized performance."
       },
+      "simulationFrames": {
+        "title": "Simulation Frames Rendering",
+        "desc": "Examples of rendering frame-by-frame simulation results."
+      },
       "webgpu": {
         "title": "WebGPU Experiments",
         "desc": "Exploring next-generation rendering pipelines based on WebGPU."
@@ -120,6 +124,16 @@
     "subdesc1": "Use the left selector to choose the scalar type, and the right selector to choose its component.",
     "subdesc2": "A common review flow is: check equivalent stress hotspots first, inspect tensor components for load behavior, then verify displacement limits.",
     "subdesc3": "You can switch scalar fields and components interactively to compare different physical quantities.",
+    "chooseFile": "Choose file",
+    "noFileSelected": "No file selected"
+  },
+  "loaderSimulationFramesResultModel": {
+    "title": "Basic Demo: Load Contour Model",
+    "chooseLocal": "Choose a local model:",
+    "desc": "This demo shows how to load contour model data. The default case is a simulation result model of a cube with a boss.",
+    "subdesc1": "This cube-plus-boss model is commonly used to simulate compressed structures and observe stress concentration at the boss root.",
+    "subdesc2": "Review a fixed base with a top load, and inspect Von Mises stress and deflection.",
+    "subdesc3": "This model is very common in finite element software for testing stress concentration, structural stiffness, mesh quality, and multi-quantity visualization.",
     "chooseFile": "Choose file",
     "noFileSelected": "No file selected"
   }

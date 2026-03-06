@@ -51,6 +51,13 @@ export default function Gallery() {
       route: '/loaderSimulation?case=simulation'
     },
     {
+      id: 'simulationFrames',
+      title: t('gallery.cases.simulationFrames.title'),
+      desc: t('gallery.cases.simulationFrames.desc'),
+      tags: ['Simulation', 'Frames'],
+      route: '/loaderSimulation?case=simulationFrames'
+    },
+    {
       id: 'webgpu',
       title: t('gallery.cases.webgpu.title'),
       desc: t('gallery.cases.webgpu.desc'),

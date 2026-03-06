@@ -90,7 +90,6 @@ function buildScalarOptions(result: any): ScalarOption[] {
 }
 
 export default function CanvasContainer({ source }: Props) {
-  const DEFAULT_FRAME_INDEX = 1;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<Piqiu3DRenderer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
@@ -101,6 +100,8 @@ export default function CanvasContainer({ source }: Props) {
   const [selectedScalarIndex, setSelectedScalarIndex] = useState(0);
   const [selectedComponentName, setSelectedComponentName] = useState("");
   const [selectedSubScalarIndex, setSelectedSubScalarIndex] = useState(0);
+  const [frameIndex, setFrameIndex] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [renderMode, setRenderMode] = useState<RenderMode>(
     "surface_with_wireframe",
   );
@@ -117,6 +118,17 @@ export default function CanvasContainer({ source }: Props) {
     () => selectedScalar?.components || [],
     [selectedScalar],
   );
+  const selectedComponent = useMemo(
+    () =>
+      componentOptions.find(
+        (item) => item.componentName === selectedComponentName,
+      ) || componentOptions[0],
+    [componentOptions, selectedComponentName],
+  );
+  const frameOptions = useMemo(
+    () => selectedComponent?.frames || [],
+    [selectedComponent],
+  );
 
   useEffect(() => {
     renderModeRef.current = renderMode;
@@ -126,6 +138,7 @@ export default function CanvasContainer({ source }: Props) {
     (
       scalarIndex: number,
       subScalarIndex: number,
+      frameIndex: number,
       resetCamera = false,
       modeOverride?: RenderMode,
     ) => {
@@ -144,7 +157,7 @@ export default function CanvasContainer({ source }: Props) {
 
       piqiuRenderer.loadSiumlationFile(simulationData, {
         scalarSelect: [scalarIndex, subScalarIndex],
-        frameIndex: DEFAULT_FRAME_INDEX,
+        frameIndex: frameIndex,
         renderMode: modeOverride || renderModeRef.current,
       });
 
@@ -157,6 +170,29 @@ export default function CanvasContainer({ source }: Props) {
     },
     [],
   );
+
+  const goToFrame = (nextFrameIndex: number) => {
+    setFrameIndex(nextFrameIndex);
+    applyScalarSelection(
+      selectedScalarIndex,
+      selectedSubScalarIndex,
+      nextFrameIndex,
+    );
+  };
+
+  const goToPrevFrame = () => {
+    if (frameOptions.length <= 1) return;
+    const nextIndex =
+      frameIndex <= 0 ? frameOptions.length - 1 : frameIndex - 1;
+    goToFrame(nextIndex);
+  };
+
+  const goToNextFrame = () => {
+    if (frameOptions.length <= 1) return;
+    const nextIndex =
+      frameIndex >= frameOptions.length - 1 ? 1 : frameIndex + 1;
+    goToFrame(nextIndex);
+  };
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -198,8 +234,7 @@ export default function CanvasContainer({ source }: Props) {
     }
 
     if (!source) {
-      src = `${import.meta.env.BASE_URL}models/post.zip`;
-      // src = `${import.meta.env.BASE_URL}models/merged_time_all.vtk.zip`;
+      src = `${import.meta.env.BASE_URL}models/merged_time_all.vtk.zip`;
     } else if (typeof source === "string") {
       src = source;
     } else {
@@ -232,9 +267,11 @@ export default function CanvasContainer({ source }: Props) {
         setSelectedScalarIndex(initScalarIndex);
         setSelectedComponentName(initComponentName);
         setSelectedSubScalarIndex(initSubScalarIndex);
+        setIsPlaying(false);
         applyScalarSelection(
           initScalarIndex,
           initSubScalarIndex,
+          frameIndex,
           true,
         );
       } catch {
@@ -252,6 +289,32 @@ export default function CanvasContainer({ source }: Props) {
     };
   }, [source, applyScalarSelection]);
 
+  useEffect(() => {
+    if (!isPlaying || frameOptions.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setFrameIndex((prevFrameIndex) => {
+        const nextFrameIndex =
+          prevFrameIndex >= frameOptions.length - 1 ? 1 : prevFrameIndex + 1;
+        applyScalarSelection(
+          selectedScalarIndex,
+          selectedSubScalarIndex,
+          nextFrameIndex,
+        );
+        return nextFrameIndex;
+      });
+    }, 700);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [
+    isPlaying,
+    frameOptions,
+    selectedScalarIndex,
+    selectedSubScalarIndex,
+    applyScalarSelection,
+  ]);
+
   const onScalarChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const nextScalarIndex = Number(event.target.value);
     const nextScalar =
@@ -263,7 +326,8 @@ export default function CanvasContainer({ source }: Props) {
     setSelectedScalarIndex(nextScalarIndex);
     setSelectedComponentName(nextComponentName);
     setSelectedSubScalarIndex(nextSubScalarIndex);
-    applyScalarSelection(nextScalarIndex, nextSubScalarIndex);
+    setIsPlaying(false);
+    applyScalarSelection(nextScalarIndex, nextSubScalarIndex, frameIndex);
   };
 
   const onComponentChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -275,7 +339,19 @@ export default function CanvasContainer({ source }: Props) {
     const nextSubScalarIndex = nextComponent?.frames[0]?.subIndex ?? 0;
     setSelectedComponentName(nextComponentName);
     setSelectedSubScalarIndex(nextSubScalarIndex);
-    applyScalarSelection(selectedScalarIndex, nextSubScalarIndex);
+    setIsPlaying(false);
+    applyScalarSelection(selectedScalarIndex, nextSubScalarIndex, frameIndex);
+  };
+
+  const onFrameChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextFrameIndex = Number(event.target.value);
+    setIsPlaying(false);
+    setFrameIndex(nextFrameIndex);
+    applyScalarSelection(
+      selectedScalarIndex,
+      selectedSubScalarIndex,
+      nextFrameIndex,
+    );
   };
 
   const onRenderModeChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -298,6 +374,7 @@ export default function CanvasContainer({ source }: Props) {
     applyScalarSelection(
       selectedScalarIndex,
       nextSubScalarIndex,
+      frameIndex,
       false,
       nextRenderMode,
     );
@@ -359,6 +436,57 @@ export default function CanvasContainer({ source }: Props) {
               </select>
             </label>
 
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span>Frame</span>
+              <button
+                type="button"
+                onClick={goToPrevFrame}
+                disabled={frameOptions.length <= 1}
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPlaying((prev) => !prev)}
+                disabled={frameOptions.length <= 1}
+              >
+                {isPlaying ? "Pause" : "Play"}
+              </button>
+              <button
+                type="button"
+                onClick={goToNextFrame}
+                disabled={frameOptions.length <= 1}
+              >
+                Next
+              </button>
+              <select value={frameIndex} onChange={onFrameChange}>
+                {frameOptions.map((item, index) => {
+                  const stepText =
+                    item.step !== null
+                      ? `Step ${item.step}`
+                      : `Frame ${index + 1}`;
+                  const timeText =
+                    item.time !== null ? ` (t=${item.time})` : "";
+                  return (
+                    <option key={item.subIndex} value={index}>
+                      {stepText}
+                      {timeText}
+                    </option>
+                  );
+                })}
+              </select>
+              <span style={{ minWidth: 64 }}>
+                {frameOptions.length > 0
+                  ? `${frameIndex + 1}/${frameOptions.length}`
+                  : "0/0"}
+              </span>
+            </div>
           </div>
         </div>
       )}
