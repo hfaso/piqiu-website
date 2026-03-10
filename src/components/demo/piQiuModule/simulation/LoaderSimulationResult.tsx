@@ -153,7 +153,7 @@ export default function CanvasContainer({ source }: Props) {
         return;
       }
       piqiuRenderer.model.update();
-      piqiuRenderer.scene.render();
+      piqiuRenderer.requestRender();
     },
     [],
   );

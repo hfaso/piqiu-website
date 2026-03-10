@@ -15,6 +15,9 @@ export class MouseHandler {
   protected m_type: string = "none";
   private onRender: () => void;
   private dpr: number;
+  private readonly boundMouseDown = this.handleMouseDown.bind(this);
+  private readonly boundMouseMove = this.handleMouseMove.bind(this);
+  private readonly boundMouseUp = this.handleMouseUp.bind(this);
 
   constructor({
     builtInUniforms,
@@ -26,26 +29,18 @@ export class MouseHandler {
     this.dpr = dpr;
   }
 
-  // 绑定事件到canvas元素
+  // 缁戝畾浜嬩欢鍒癱anvas鍏冪礌
   bindEvents(canvas: HTMLCanvasElement): void {
-    canvas.addEventListener(
-      "mousedown",
-      this.handleMouseDown.bind(this),
-      false,
-    );
-    canvas.addEventListener(
-      "mousemove",
-      this.handleMouseMove.bind(this),
-      false,
-    );
-    canvas.addEventListener("mouseup", this.handleMouseUp.bind(this), false);
+    canvas.addEventListener("mousedown", this.boundMouseDown, false);
+    canvas.addEventListener("mousemove", this.boundMouseMove, false);
+    canvas.addEventListener("mouseup", this.boundMouseUp, false);
   }
 
-  // 解绑事件
+  // 瑙ｇ粦浜嬩欢
   unbindEvents(canvas: HTMLCanvasElement): void {
-    canvas.removeEventListener("mousedown", this.handleMouseDown.bind(this));
-    canvas.removeEventListener("mousemove", this.handleMouseMove.bind(this));
-    canvas.removeEventListener("mouseup", this.handleMouseUp.bind(this));
+    canvas.removeEventListener("mousedown", this.boundMouseDown);
+    canvas.removeEventListener("mousemove", this.boundMouseMove);
+    canvas.removeEventListener("mouseup", this.boundMouseUp);
   }
 
   private handleMouseDown(event: MouseEvent): void {
@@ -54,10 +49,10 @@ export class MouseHandler {
       event.offsetY * this.dpr,
     );
     switch (event.button) {
-      case 0: // 左键
+      case 0: // 宸﹂敭
         this.begin("orbit", pos);
         break;
-      case 2: // 右键
+      case 2: // 鍙抽敭
         this.begin("pan", pos);
         break;
     }
@@ -108,13 +103,13 @@ export class MouseHandler {
     }
   }
 
-  // 清理资源
+  // 娓呯悊璧勫弻
   destroy(canvas: HTMLCanvasElement): void {
     this.unbindEvents(canvas);
   }
 }
 
-// React Hook 版本
+// React Hook 鐗堟湰
 export const useMouseHandler = (props: Omit<MouseHandlerProps, "canvas">) => {
   return new MouseHandler(props);
 };

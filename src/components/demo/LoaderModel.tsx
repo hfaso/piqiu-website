@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as piqiu3d from "piqiu3d";
-import { Piqiu3DRenderer } from "./piQiuModule/Piqiu3DRenderer";
+import { Piqiu3DRenderer, type PartNode } from "./piQiuModule/Piqiu3DRenderer";
 import CanvasLoadingOverlay from "./piQiuModule/common/CanvasLoadingOverlay";
 
 type Props = {
@@ -13,6 +13,7 @@ export default function CanvasContainer({ source }: Props) {
   const rendererRef = useRef<Piqiu3DRenderer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [partTree, setPartTree] = useState<PartNode[]>([]);
 
   const loadVersionRef = useRef(0);
 
@@ -75,6 +76,7 @@ export default function CanvasContainer({ source }: Props) {
       const loader = new piqiu3d.GLTFLoader();
       console.log("LoaderModel: start loading", src);
       setIsLoading(true);
+      setPartTree([]);
 
       try {
         const m = piqiuRenderer.model;
@@ -100,6 +102,7 @@ export default function CanvasContainer({ source }: Props) {
           piqiuRenderer.addPart(mesh);
         }
         piqiuRenderer.updateCamera();
+        setPartTree(piqiuRenderer.getPartTree());
       } catch (e) {
         // ignore
       } finally {
@@ -119,9 +122,89 @@ export default function CanvasContainer({ source }: Props) {
     };
   }, [source]);
 
+  const visibleCount = partTree.filter((part) => part.visible).length;
+  const allVisible = partTree.length > 0 && visibleCount === partTree.length;
+
   return (
     <div className="canvas-stage">
       <canvas ref={canvasRef} id="demo"></canvas>
+      {partTree.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: 10,
+            left: 10,
+            zIndex: 10,
+            border: "1px solid #d9d9d9",
+            borderRadius: 4,
+            padding: 10,
+            maxHeight: 240,
+            overflow: "auto",
+            background: "rgba(255, 255, 255, 0.95)",
+            minWidth: 240,
+          }}
+        >
+          <div style={{ marginBottom: 8, fontWeight: 600 }}>Part Tree</div>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 8,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={allVisible}
+              onChange={(event) => {
+                rendererRef.current?.setAllPartsVisible(event.target.checked);
+                setPartTree((prev) =>
+                  prev.map((part) => ({
+                    ...part,
+                    visible: event.target.checked,
+                  })),
+                );
+              }}
+            />
+            <span style={{ color: "#000" }}>
+              All Parts ({visibleCount}/{partTree.length})
+            </span>
+          </label>
+          <div>
+            {partTree.map((part) => (
+              <label
+                key={`${part.id}-${part.index}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 6,
+                  paddingLeft: 12,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={part.visible}
+                  onChange={(event) => {
+                    rendererRef.current?.setPartVisible(
+                      part.index,
+                      event.target.checked,
+                    );
+                    setPartTree((prev) =>
+                      prev.map((item) =>
+                        item.index === part.index
+                          ? { ...item, visible: event.target.checked }
+                          : item,
+                      ),
+                    );
+                  }}
+                />
+                <span style={{ color: "#000" }}>{part.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       <CanvasLoadingOverlay loading={isLoading} />
     </div>
   );

@@ -1,4 +1,5 @@
 import "./LoaderSimulation.css";
+import "./LoaderButtons.css";
 import LoaderGeometryDemo from "../components/demo/piQiuModule/simulation/LoaderGeometry";
 import LoaderMeshDemo from "../components/demo/piQiuModule/simulation/LoaderMesh";
 import LoaderSimulationResultDemo from "../components/demo/piQiuModule/simulation/LoaderSimulationResult";
@@ -135,14 +136,7 @@ function LoaderSimulation() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              color: "inherit",
-              border: "1px solid rgba(255,255,255,0.18)",
-              borderRadius: 10,
-              padding: "8px 12px",
-              cursor: "pointer",
-            }}
+            className="loader-action-button"
           >
             {t("loaderModel.chooseFile")}
           </button>

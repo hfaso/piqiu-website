@@ -17,8 +17,48 @@ export class Piqiu3DRenderer {
   private renderPass: piqiu3d.RenderPass;
   public scene: piqiu3d.Scene;
   public mouseHandler: any;
-  public dpr = window.devicePixelRatio || 1;
+  public dpr = Math.min(window.devicePixelRatio || 1, 2);
   public _boundingBox: piqiu3d.BoundingBox | undefined;
+  private pendingRender: number | null = null;
+  private resizeObserver: ResizeObserver | null = null;
+  private lastSize: { width: number; height: number } | null = null;
+  public requestRender = (): void => {
+    if (this.pendingRender !== null) return;
+    this.pendingRender = window.requestAnimationFrame(() => {
+      this.pendingRender = null;
+      if (this.scene) {
+        this.scene.render();
+      }
+    });
+  };
+  private readonly resizeToDisplay = (): void => {
+    const parent = this.canvas.parentElement;
+    const rect = parent ? parent.getBoundingClientRect() : null;
+    const cssWidth = rect?.width ?? window.innerWidth * 0.65;
+    const cssHeight = rect?.height ?? window.innerHeight * 0.65;
+    if (cssWidth <= 0 || cssHeight <= 0) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = dpr;
+    const displayWidth = Math.max(1, Math.round(cssWidth * dpr));
+    const displayHeight = Math.max(1, Math.round(cssHeight * dpr));
+
+    if (
+      this.lastSize &&
+      this.lastSize.width === displayWidth &&
+      this.lastSize.height === displayHeight
+    ) {
+      return;
+    }
+
+    this.lastSize = { width: displayWidth, height: displayHeight };
+    this.canvas.width = displayWidth;
+    this.canvas.height = displayHeight;
+    this.canvas.style.width = `${Math.round(cssWidth)}px`;
+    this.canvas.style.height = `${Math.round(cssHeight)}px`;
+    this.scene.size = [displayWidth, displayHeight];
+    this.requestRender();
+  };
   private readonly handleWheel = (event: WheelEvent): void => {
     const action = new piqiu3d.WheelZoomTool(this.builtInUniforms);
     const current = vec2.fromValues(
@@ -26,16 +66,12 @@ export class Piqiu3DRenderer {
       event.offsetY * this.dpr,
     );
     action.update(current, event.deltaY < 0 ? 1.1 : 1 / 1.1);
-    this.scene.render();
+    this.requestRender();
   };
   private readonly handleResize = (): void => {
-    this.canvas.width = window.innerWidth * 0.65;
-    this.canvas.height = window.innerHeight * 0.65;
-
-    this.scene.size = [this.canvas.width, this.canvas.height];
-    this.scene.render();
+    this.resizeToDisplay();
   };
-  // 可以按需暴露其他属性，如模型、内置uniforms等
+  // 鍙互鎸夐渶鏆撮湶鍏朵粬灞炴€э紝濡傛ā鍨嬨€佸唴缃畊niforms绛?
   public get model() {
     return this.renderPass.model;
   }
@@ -52,7 +88,7 @@ export class Piqiu3DRenderer {
     }
     this.canvas = canvas;
 
-    // 1. 初始化渲染上下文和渲染通道
+    // 1. 鍒濆鍖栨覆鏌撲笂涓嬫枃鍜屾覆鏌撻€氶亾
     const glContext = this.canvas.getContext("webgl2", { stencil: false });
     if (!glContext) {
       throw new Error("WebGL2 context is not supported.");
@@ -64,29 +100,25 @@ export class Piqiu3DRenderer {
       depth: 1.0,
     });
 
-    // 2. 初始化场景
+    // 2. 鍒濆鍖栧満鏅?
     this.scene = new piqiu3d.Scene(this.renderContext);
     this.scene.push(this.renderPass);
     this.setSize(initialSize.width, initialSize.height);
 
-    // 3. 初始化鼠标处理器
+    // 3. 鍒濆鍖栭紶鏍囧鐞嗗櫒
     this.mouseHandler = useMouseHandler({
       builtInUniforms: this.builtInUniforms,
-      onRender: () => {
-        if (this.scene) {
-          this.scene.render();
-        }
-      },
+      onRender: this.requestRender,
       dpr: this.dpr,
     });
 
-    // 阻止右键菜单
+    // 闃绘鍙抽敭鑿滃崟
     this.canvas.oncontextmenu = (event) => {
       event.preventDefault();
     };
   }
 
-  // 简化part增加方法
+  // 绠€鍖杙art澧炲姞鏂规硶
   addPart(part: piqiu3d.Part) {
     this.model.add(part);
   }
@@ -114,8 +146,8 @@ export class Piqiu3DRenderer {
     const part = this.getTopLevelParts()[index];
     if (!part) return false;
     part.visible = visible;
-    this.model.update();
-    this.scene.render();
+    this.model.update(true);
+    this.requestRender();
     return true;
   }
 
@@ -124,8 +156,8 @@ export class Piqiu3DRenderer {
     parts.forEach((part) => {
       part.visible = visible;
     });
-    this.model.update();
-    this.scene.render();
+    this.model.update(true);
+    this.requestRender();
   }
 
   get boundingBox() {
@@ -268,11 +300,13 @@ export class Piqiu3DRenderer {
     console.log(this.boundingBox);
   }
 
-  // 添加通用事件监听器
+  // 娣诲姞閫氱敤浜嬩欢鐩戝惉鍣?
   addGeneralEventListener() {
     this.addMouseEventListener();
     this.addMouseWheelEventListener();
     this.addWindowResizeListener();
+    this.startResizeObserver();
+    this.resizeToDisplay();
   }
 
   addMouseEventListener() {
@@ -287,7 +321,7 @@ export class Piqiu3DRenderer {
     window.addEventListener("resize", this.handleResize);
   }
 
-  // 更新相机位置以适应当前场景
+  // 鏇存柊鐩告満浣嶇疆浠ラ€傚簲褰撳墠鍦烘櫙
   updateCamera() {
     const resetTool = new piqiu3d.ResetTool(this.builtInUniforms);
 
@@ -307,8 +341,8 @@ export class Piqiu3DRenderer {
 
     resetTool.home(this.boundingBox);
 
-    this.model.update();
-    this.scene.render();
+    this.model.update(true);
+    this.requestRender();
   }
 
   removeMouseEventListener() {
@@ -327,25 +361,46 @@ export class Piqiu3DRenderer {
     this.removeMouseEventListener();
     this.removeMouseWheelEventListener();
     this.removeWindowResizeListener();
+    this.stopResizeObserver();
   }
 
   /**
-   * 设置画布大小
+   * 璁剧疆鐢诲竷澶у皬
    */
   public setSize(width: number, height: number): void {
     if (width <= 0 || height <= 0) {
       console.warn("Invalid canvas size.");
       return;
     }
+    this.canvas.width = width;
+    this.canvas.height = height;
     this.scene.size = [width, height];
   }
 
   /**
-   * 清理资源，防止内存泄漏
+   * 娓呯悊璧勬簮锛岄槻姝㈠唴瀛樻硠婕?
    */
   public dispose(): void {
-    // 执行piqiu3d内部所需的清理操作
-    // 例如：this.scene.remove(this.renderPass);
+    // 鎵цpiqiu3d鍐呴儴鎵€闇€鐨勬竻鐞嗘搷浣?
+    // 渚嬪锛歵his.scene.remove(this.renderPass);
+    if (this.pendingRender !== null) {
+      window.cancelAnimationFrame(this.pendingRender);
+      this.pendingRender = null;
+    }
     console.log("Piqiu3DRenderer disposed.");
+  }
+
+  private startResizeObserver(): void {
+    if (this.resizeObserver || typeof ResizeObserver === "undefined") return;
+    this.resizeObserver = new ResizeObserver(() => {
+      this.resizeToDisplay();
+    });
+    this.resizeObserver.observe(this.canvas.parentElement ?? this.canvas);
+  }
+
+  private stopResizeObserver(): void {
+    if (!this.resizeObserver) return;
+    this.resizeObserver.disconnect();
+    this.resizeObserver = null;
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import * as piqiu3d from "piqiu3d";
 import {
   Piqiu3DRenderer,
@@ -15,9 +15,39 @@ export default function CanvasContainer({ source }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<Piqiu3DRenderer | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const simulationDataRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [renderMode, setRenderMode] = useState<RenderMode>("surface_with_wireframe");
   const [partTree, setPartTree] = useState<PartNode[]>([]);
+  const renderModeRef = useRef<RenderMode>("surface_with_wireframe");
+
+  const applySimulationData = useCallback(
+    (data: any, resetCamera: boolean, mode: RenderMode) => {
+      const piqiuRenderer = rendererRef.current;
+      if (!piqiuRenderer || !data) return;
+      try {
+        const m = piqiuRenderer.model;
+        if (m && typeof m.clear === "function") {
+          m.clear();
+        }
+      } catch (e) {
+        // ignore
+      }
+      piqiuRenderer.loadSiumlationFile(data, { renderMode: mode });
+      piqiuRenderer.setAllPartsVisible(true);
+      if (resetCamera) {
+        piqiuRenderer.updateCamera();
+      } else {
+        piqiuRenderer.requestRender();
+      }
+      setPartTree(piqiuRenderer.getPartTree());
+    },
+    [],
+  );
+
+  useEffect(() => {
+    renderModeRef.current = renderMode;
+  }, [renderMode]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -70,15 +100,7 @@ export default function CanvasContainer({ source }: Props) {
     const loadModel = async () => {
       setIsLoading(true);
       setPartTree([]);
-      try {
-        const m = piqiuRenderer.model;
-        if (m && typeof m.clear === "function") {
-          m.clear();
-        }
-      } catch (e) {
-        // ignore
-      }
-
+      simulationDataRef.current = null;
       try {
         const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
         if (canceled || rendererRef.current !== piqiuRenderer) return;
@@ -88,10 +110,8 @@ export default function CanvasContainer({ source }: Props) {
           database,
           ArrayBuffer,
         };
-        piqiuRenderer.loadSiumlationFile(res, { renderMode });
-        piqiuRenderer.setAllPartsVisible(true);
-        piqiuRenderer.updateCamera();
-        setPartTree(piqiuRenderer.getPartTree());
+        simulationDataRef.current = res;
+        applySimulationData(res, true, renderModeRef.current);
       } catch (e) {
         // ignore
       } finally {
@@ -105,7 +125,14 @@ export default function CanvasContainer({ source }: Props) {
     return () => {
       canceled = true;
     };
-  }, [source, renderMode]);
+  }, [source, applySimulationData]);
+
+  useEffect(() => {
+    if (!rendererRef.current) return;
+    const data = simulationDataRef.current;
+    if (!data) return;
+    applySimulationData(data, false, renderMode);
+  }, [renderMode, applySimulationData]);
 
   const onRenderModeChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setRenderMode(event.target.value as RenderMode);
@@ -210,4 +237,3 @@ export default function CanvasContainer({ source }: Props) {
     </div>
   );
 }
-

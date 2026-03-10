@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
+import "./piQiuModule/common/CanvasLoadingOverlay.css";
 // import * as piqiu3d from '@piqiu/piqiu3d'
 import * as piqiu3d from "piqiu3d";
 import { Piqiu3DRenderer } from "./piQiuModule/Piqiu3DRenderer";
 
 export default function CanvasContainer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const sceneRef = useRef<any>(null);
+  const rendererRef = useRef<Piqiu3DRenderer | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -18,7 +19,7 @@ export default function CanvasContainer() {
       width: canvas.width,
       height: canvas.height,
     });
-    sceneRef.current = piqiuRenderer.scene;
+    rendererRef.current = piqiuRenderer;
 
     const cubePart = new piqiu3d.CubePart(1, 1, 1);
 
@@ -27,10 +28,19 @@ export default function CanvasContainer() {
     piqiuRenderer.addGeneralEventListener();
 
     piqiuRenderer.updateCamera();
+
+    return () => {
+      try {
+        piqiuRenderer.removeGeneralEventListener();
+        piqiuRenderer.dispose();
+      } catch {
+        // ignore cleanup errors
+      }
+    };
   }, []);
 
   return (
-    <div>
+    <div className="canvas-stage">
       <canvas ref={canvasRef} id="demo"></canvas>
     </div>
   );

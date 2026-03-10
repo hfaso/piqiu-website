@@ -1,0 +1,27 @@
+.loader-action-button {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background-color: rgba(255, 255, 255, 0.04);
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.loader-action-button:hover:not(:disabled) {
+  border-color: rgba(148, 163, 184, 1);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.loader-action-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.4);
+}
+
+.loader-action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: rgba(148, 163, 184, 0.4);
+}

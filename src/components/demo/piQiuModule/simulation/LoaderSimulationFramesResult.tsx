@@ -166,7 +166,7 @@ export default function CanvasContainer({ source }: Props) {
         return;
       }
       piqiuRenderer.model.update();
-      piqiuRenderer.scene.render();
+      piqiuRenderer.requestRender();
     },
     [],
   );
@@ -446,6 +446,7 @@ export default function CanvasContainer({ source }: Props) {
               <span>Frame</span>
               <button
                 type="button"
+                className="loader-action-button"
                 onClick={goToPrevFrame}
                 disabled={frameOptions.length <= 1}
               >
@@ -453,6 +454,7 @@ export default function CanvasContainer({ source }: Props) {
               </button>
               <button
                 type="button"
+                className="loader-action-button"
                 onClick={() => setIsPlaying((prev) => !prev)}
                 disabled={frameOptions.length <= 1}
               >
@@ -460,6 +462,7 @@ export default function CanvasContainer({ source }: Props) {
               </button>
               <button
                 type="button"
+                className="loader-action-button"
                 onClick={goToNextFrame}
                 disabled={frameOptions.length <= 1}
               >
