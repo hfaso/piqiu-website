@@ -19,6 +19,8 @@ export class Piqiu3DRenderer {
   public mouseHandler: any;
   public dpr = Math.min(window.devicePixelRatio || 1, 2);
   public _boundingBox: piqiu3d.BoundingBox | undefined;
+  private postDataDrawables: piqiu3d.PostDataDrawable[] = [];
+  private lastSimulationRenderMode: RenderMode | null = null;
   private pendingRender: number | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private lastSize: { width: number; height: number } | null = null;
@@ -186,6 +188,7 @@ export class Piqiu3DRenderer {
       return;
     }
     const { partBuffer } = loaderDataModel;
+    this.postDataDrawables = [];
     const partBySource = new WeakMap<object, piqiu3d.Part>();
     let createdPartCount = 0;
 
@@ -263,6 +266,7 @@ export class Piqiu3DRenderer {
           }
           _postData.transform = partsData.transform;
           partsData.DrawableDataList.push(_postData);
+          this.postDataDrawables.push(_postData);
         }
       });
       const source = get(partDataBuffer, "json");
@@ -298,6 +302,33 @@ export class Piqiu3DRenderer {
       ),
     );
     console.log(this.boundingBox);
+    if (options?.renderMode) {
+      this.lastSimulationRenderMode = options.renderMode;
+    }
+  }
+
+  updateSimulationScalar(options: {
+    scalarSelect?: [number, number];
+    frameIndex?: number;
+    renderMode?: RenderMode;
+  }): boolean {
+    if (this.postDataDrawables.length === 0) return false;
+    if (
+      options.renderMode &&
+      this.lastSimulationRenderMode &&
+      options.renderMode !== this.lastSimulationRenderMode
+    ) {
+      return false;
+    }
+    if (!options.scalarSelect || options.scalarSelect.length < 2) return false;
+    this.postDataDrawables.forEach((drawable) => {
+      drawable.updateScalarByScalarIndex(
+        options.scalarSelect,
+        options.frameIndex,
+      );
+    });
+    this.requestRender();
+    return true;
   }
 
   // 娣诲姞閫氱敤浜嬩欢鐩戝惉鍣?

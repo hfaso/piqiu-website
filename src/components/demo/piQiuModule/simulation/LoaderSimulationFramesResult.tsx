@@ -146,6 +146,19 @@ export default function CanvasContainer({ source }: Props) {
       const simulationData = simulationDataRef.current;
       if (!piqiuRenderer || !simulationData) return;
 
+      const nextRenderMode = modeOverride || renderModeRef.current;
+      const updated = piqiuRenderer.updateSimulationScalar({
+        scalarSelect: [scalarIndex, subScalarIndex],
+        frameIndex,
+        renderMode: nextRenderMode,
+      });
+      if (updated) {
+        if (resetCamera) {
+          piqiuRenderer.updateCamera();
+        }
+        return;
+      }
+
       try {
         const m = piqiuRenderer.model;
         if (m && typeof m.clear === "function") {
@@ -158,7 +171,7 @@ export default function CanvasContainer({ source }: Props) {
       piqiuRenderer.loadSiumlationFile(simulationData, {
         scalarSelect: [scalarIndex, subScalarIndex],
         frameIndex: frameIndex,
-        renderMode: modeOverride || renderModeRef.current,
+        renderMode: nextRenderMode,
       });
 
       if (resetCamera) {
