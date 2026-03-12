@@ -1,4 +1,8 @@
-// import * as piqiu3d from '@piqiu/piqiu3d'
+/**
+ * Mouse Handler - 处理鼠标交互事件
+ * 支持轨道旋转和平移操作
+ */
+
 import * as piqiu3d from "piqiu3d";
 import { vec2 } from "gl-matrix";
 
@@ -10,76 +14,84 @@ export interface MouseHandlerProps {
 }
 
 export class MouseHandler {
-  protected m_buildInUniforms: piqiu3d.BuiltInUniforms;
-  private m_action: piqiu3d.PanTool | piqiu3d.OrbitTool | undefined;
-  protected m_type: string = "none";
+  // 公共属性（无前缀）
+  public builtInUniforms: piqiu3d.BuiltInUniforms;
+  public type: string = "none";
+
+  // 私有属性
+  private action: piqiu3d.PanTool | piqiu3d.OrbitTool | undefined;
   private onRender: () => void;
   private dpr: number;
-  private readonly boundMouseDown = this.handleMouseDown.bind(this);
-  private readonly boundMouseMove = this.handleMouseMove.bind(this);
-  private readonly boundMouseUp = this.handleMouseUp.bind(this);
+
+  // 绑定的事件处理函数（使用箭头函数保持 this 上下文）
+  private readonly handleMouseDown = (event: MouseEvent): void => {
+    const pos = vec2.fromValues(
+      event.offsetX * this.dpr,
+      event.offsetY * this.dpr,
+    );
+
+    switch (event.button) {
+      case 0: // 左键 - 轨道旋转
+        this.begin("orbit", pos);
+        break;
+      case 2: // 右键 - 平移
+        this.begin("pan", pos);
+        break;
+    }
+  };
+
+  private readonly handleMouseMove = (event: MouseEvent): void => {
+    const pos = vec2.fromValues(
+      event.offsetX * this.dpr,
+      event.offsetY * this.dpr,
+    );
+    this.move(pos);
+  };
+
+  private readonly handleMouseUp = (): void => {
+    this.end();
+  };
 
   constructor({
     builtInUniforms,
     onRender,
     dpr = 1,
   }: Omit<MouseHandlerProps, "canvas">) {
-    this.m_buildInUniforms = builtInUniforms;
+    this.builtInUniforms = builtInUniforms;
     this.onRender = onRender;
     this.dpr = dpr;
   }
 
-  // 缁戝畾浜嬩欢鍒癱anvas鍏冪礌
+  /**
+   * 绑定事件到 canvas 元素
+   */
   bindEvents(canvas: HTMLCanvasElement): void {
-    canvas.addEventListener("mousedown", this.boundMouseDown, false);
-    canvas.addEventListener("mousemove", this.boundMouseMove, false);
-    canvas.addEventListener("mouseup", this.boundMouseUp, false);
+    canvas.addEventListener("mousedown", this.handleMouseDown, false);
+    canvas.addEventListener("mousemove", this.handleMouseMove, false);
+    canvas.addEventListener("mouseup", this.handleMouseUp, false);
   }
 
-  // 瑙ｇ粦浜嬩欢
+  /**
+   * 解绑事件
+   */
   unbindEvents(canvas: HTMLCanvasElement): void {
-    canvas.removeEventListener("mousedown", this.boundMouseDown);
-    canvas.removeEventListener("mousemove", this.boundMouseMove);
-    canvas.removeEventListener("mouseup", this.boundMouseUp);
+    canvas.removeEventListener("mousedown", this.handleMouseDown);
+    canvas.removeEventListener("mousemove", this.handleMouseMove);
+    canvas.removeEventListener("mouseup", this.handleMouseUp);
   }
 
-  private handleMouseDown(event: MouseEvent): void {
-    const pos = vec2.fromValues(
-      event.offsetX * this.dpr,
-      event.offsetY * this.dpr,
-    );
-    switch (event.button) {
-      case 0: // 宸﹂敭
-        this.begin("orbit", pos);
-        break;
-      case 2: // 鍙抽敭
-        this.begin("pan", pos);
-        break;
-    }
-  }
-
-  private handleMouseMove(event: MouseEvent): void {
-    const pos = vec2.fromValues(
-      event.offsetX * this.dpr,
-      event.offsetY * this.dpr,
-    );
-    this.move(pos);
-  }
-
-  private handleMouseUp(): void {
-    // const pos = vec2.fromValues(event.offsetX * this.dpr, event.offsetY * this.dpr);
-    this.end();
-  }
-
+  /**
+   * 开始交互操作
+   */
   begin(type: string, current: vec2): void {
     switch (type) {
       case "pan":
-        this.m_action = new piqiu3d.PanTool(this.m_buildInUniforms, current);
-        this.m_type = type;
+        this.action = new piqiu3d.PanTool(this.builtInUniforms, current);
+        this.type = type;
         break;
       case "orbit":
-        this.m_action = new piqiu3d.OrbitTool(this.m_buildInUniforms, current);
-        this.m_type = type;
+        this.action = new piqiu3d.OrbitTool(this.builtInUniforms, current);
+        this.type = type;
         break;
     }
 
@@ -88,28 +100,40 @@ export class MouseHandler {
     }
   }
 
+  /**
+   * 处理鼠标移动
+   */
   move(current: vec2): void {
-    if (this.m_action) {
-      this.m_action.update(current);
+    if (this.action) {
+      this.action.update(current);
       this.onRender();
     }
   }
 
+  /**
+   * 结束交互操作
+   */
   end(): void {
-    if (this.m_action) {
-      this.m_action = undefined;
-      this.m_type = "none";
+    if (this.action) {
+      this.action = undefined;
+      this.type = "none";
       this.onRender();
     }
   }
 
-  // 娓呯悊璧勫弻
+  /**
+   * 清理资源
+   */
   destroy(canvas: HTMLCanvasElement): void {
     this.unbindEvents(canvas);
   }
 }
 
-// React Hook 鐗堟湰
-export const useMouseHandler = (props: Omit<MouseHandlerProps, "canvas">) => {
+/**
+ * React Hook - 创建 MouseHandler 实例
+ */
+export function useMouseHandler(
+  props: Omit<MouseHandlerProps, "canvas">,
+): MouseHandler {
   return new MouseHandler(props);
-};
+}

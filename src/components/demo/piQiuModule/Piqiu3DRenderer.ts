@@ -1,31 +1,54 @@
+/**
+ * Piqiu3D 渲染器封装类
+ * 提供 3D 模型加载、渲染和交互功能
+ */
+
 import * as piqiu3d from "piqiu3d";
 import { get } from "lodash";
-import { useMouseHandler } from "./handler/MouseHandler";
+import { MouseHandler } from "./handler/MouseHandler";
 import { vec2, vec3 } from "gl-matrix";
+import type { PartNode, SimulationData } from "./types";
 
+export type { PartNode };
 export type RenderMode = "wireframe" | "surface_with_wireframe" | "surface";
-export type PartNode = {
-  index: number;
-  id: string;
-  name: string;
-  visible: boolean;
-};
 
 export class Piqiu3DRenderer {
+  // Canvas 和渲染上下文
   private canvas: HTMLCanvasElement;
   public renderContext: piqiu3d.RenderContext;
   private renderPass: piqiu3d.RenderPass;
   public scene: piqiu3d.Scene;
-  public mouseHandler: any;
+  public mouseHandler: MouseHandler;
+
+  // 设备像素比
   public dpr = Math.min(window.devicePixelRatio || 1, 2);
-  public _boundingBox: piqiu3d.BoundingBox | undefined;
+
+  // 边界框
+  private _boundingBox: piqiu3d.BoundingBox | undefined;
+
+  // 后处理数据可绘制对象
   private postDataDrawables: piqiu3d.PostDataDrawable[] = [];
+
+  // 渲染模式缓存
   private lastSimulationRenderMode: RenderMode | null = null;
+
+  // 动画帧 ID
   private pendingRender: number | null = null;
+
+  // Resize 观察器
   private resizeObserver: ResizeObserver | null = null;
   private lastSize: { width: number; height: number } | null = null;
+
+  // 预创建的 Tool 实例（性能优化）
+  private wheelZoomTool: piqiu3d.WheelZoomTool | null = null;
+  private resetTool: piqiu3d.ResetTool | null = null;
+
+  /**
+   * 请求渲染
+   */
   public requestRender = (): void => {
     if (this.pendingRender !== null) return;
+
     this.pendingRender = window.requestAnimationFrame(() => {
       this.pendingRender = null;
       if (this.scene) {
@@ -33,11 +56,16 @@ export class Piqiu3DRenderer {
       }
     });
   };
+
+  /**
+   * 调整画布大小以适应显示
+   */
   private readonly resizeToDisplay = (): void => {
     const parent = this.canvas.parentElement;
     const rect = parent ? parent.getBoundingClientRect() : null;
     const cssWidth = rect?.width ?? window.innerWidth * 0.65;
     const cssHeight = rect?.height ?? window.innerHeight * 0.65;
+
     if (cssWidth <= 0 || cssHeight <= 0) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -45,6 +73,7 @@ export class Piqiu3DRenderer {
     const displayWidth = Math.max(1, Math.round(cssWidth * dpr));
     const displayHeight = Math.max(1, Math.round(cssHeight * dpr));
 
+    // 检查尺寸是否变化
     if (
       this.lastSize &&
       this.lastSize.width === displayWidth &&
@@ -61,22 +90,41 @@ export class Piqiu3DRenderer {
     this.scene.size = [displayWidth, displayHeight];
     this.requestRender();
   };
+
+  /**
+   * 处理鼠标滚轮事件
+   */
   private readonly handleWheel = (event: WheelEvent): void => {
-    const action = new piqiu3d.WheelZoomTool(this.builtInUniforms);
+    // 复用或创建 WheelZoomTool
+    if (!this.wheelZoomTool) {
+      this.wheelZoomTool = new piqiu3d.WheelZoomTool(this.builtInUniforms);
+    }
+
     const current = vec2.fromValues(
       event.offsetX * this.dpr,
       event.offsetY * this.dpr,
     );
-    action.update(current, event.deltaY < 0 ? 1.1 : 1 / 1.1);
+    this.wheelZoomTool.update(current, event.deltaY < 0 ? 1.1 : 1 / 1.1);
     this.requestRender();
   };
+
+  /**
+   * 处理窗口大小变化
+   */
   private readonly handleResize = (): void => {
     this.resizeToDisplay();
   };
-  // 鍙互鎸夐渶鏆撮湶鍏朵粬灞炴€э紝濡傛ā鍨嬨€佸唴缃畊niforms绛?
+
+  /**
+   * 获取模型
+   */
   public get model() {
     return this.renderPass.model;
   }
+
+  /**
+   * 获取内置 uniforms
+   */
   public get builtInUniforms() {
     return this.renderPass.camera.builtInUniforms;
   }
@@ -90,41 +138,47 @@ export class Piqiu3DRenderer {
     }
     this.canvas = canvas;
 
-    // 1. 鍒濆鍖栨覆鏌撲笂涓嬫枃鍜屾覆鏌撻€氶亾
+    // 初始化 WebGL 上下文
     const glContext = this.canvas.getContext("webgl2", { stencil: false });
     if (!glContext) {
       throw new Error("WebGL2 context is not supported.");
     }
     this.renderContext = new piqiu3d.RenderContext(glContext, []);
 
+    // 初始化渲染通道
     this.renderPass = new piqiu3d.RenderPass({
       color: [0.8, 0.8, 0.8, 1],
       depth: 1.0,
     });
 
-    // 2. 鍒濆鍖栧満鏅?
+    // 初始化场景
     this.scene = new piqiu3d.Scene(this.renderContext);
     this.scene.push(this.renderPass);
     this.setSize(initialSize.width, initialSize.height);
 
-    // 3. 鍒濆鍖栭紶鏍囧鐞嗗櫒
-    this.mouseHandler = useMouseHandler({
+    // 初始化鼠标处理器
+    this.mouseHandler = new MouseHandler({
       builtInUniforms: this.builtInUniforms,
       onRender: this.requestRender,
       dpr: this.dpr,
     });
 
-    // 闃绘鍙抽敭鑿滃崟
+    // 阻止右键菜单
     this.canvas.oncontextmenu = (event) => {
       event.preventDefault();
     };
   }
 
-  // 绠€鍖杙art澧炲姞鏂规硶
-  addPart(part: piqiu3d.Part) {
+  /**
+   * 添加 Part
+   */
+  addPart(part: piqiu3d.Part): void {
     this.model.add(part);
   }
 
+  /**
+   * 获取顶层 Parts
+   */
   private getTopLevelParts(): piqiu3d.Part[] {
     const parts: piqiu3d.Part[] = [];
     this.model.forEach((node) => {
@@ -135,6 +189,9 @@ export class Piqiu3DRenderer {
     return parts;
   }
 
+  /**
+   * 获取 Part 树
+   */
   getPartTree(): PartNode[] {
     return this.getTopLevelParts().map((part, index) => ({
       index,
@@ -144,15 +201,22 @@ export class Piqiu3DRenderer {
     }));
   }
 
+  /**
+   * 设置指定 Part 的可见性
+   */
   setPartVisible(index: number, visible: boolean): boolean {
     const part = this.getTopLevelParts()[index];
     if (!part) return false;
+
     part.visible = visible;
     this.model.update(true);
     this.requestRender();
     return true;
   }
 
+  /**
+   * 设置所有 Parts 的可见性
+   */
   setAllPartsVisible(visible: boolean): void {
     const parts = this.getTopLevelParts();
     parts.forEach((part) => {
@@ -162,31 +226,41 @@ export class Piqiu3DRenderer {
     this.requestRender();
   }
 
-  get boundingBox() {
+  /**
+   * 获取边界框
+   */
+  get boundingBox(): piqiu3d.BoundingBox | undefined {
     return this._boundingBox;
   }
 
+  /**
+   * 设置边界框
+   */
   set boundingBox(bbox: piqiu3d.BoundingBox | undefined) {
     this._boundingBox = bbox;
   }
 
+  /**
+   * 加载仿真文件
+   */
   loadSiumlationFile(
-    data?: piqiu3d.LoadDataBase,
+    data?: SimulationData,
     options?: {
       color?: [number, number, number];
       scalarSelect?: [number, number];
       frameIndex?: number;
       renderMode?: RenderMode;
     },
-  ) {
+  ): void {
     const loaderDataModel = get(data, "database.model") as
       | piqiu3d.LoaderDataModel
       | undefined;
+
     if (!loaderDataModel) {
       console.warn("LoadSimulationFile: database.model is missing.");
-      console.timeEnd("Load");
       return;
     }
+
     const { partBuffer } = loaderDataModel;
     this.postDataDrawables = [];
     const partBySource = new WeakMap<object, piqiu3d.Part>();
@@ -195,124 +269,148 @@ export class Piqiu3DRenderer {
     for (let i = 0; i < partBuffer.length; i++) {
       const partDataBuffer = partBuffer[i];
       const partsData = new piqiu3d.PartsData(partDataBuffer);
+
       partDataBuffer?.forEach((buffer) => {
         if (buffer instanceof piqiu3d.GeoDataBuffer) {
           if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.FACE) {
-            const _geoData = new piqiu3d.GeoDataDrawable({ buffer }, options);
-            _geoData.geoType = piqiu3d.DRAW.surface;
-            _geoData.visible = options?.renderMode !== "wireframe";
-            _geoData.transform = partsData.transform;
-            partsData.DrawableDataList.push(_geoData);
-            partsData.id = _geoData.buffer.geomid;
+            const geoData = new piqiu3d.GeoDataDrawable({ buffer }, options);
+            geoData.geoType = piqiu3d.DRAW.surface;
+            geoData.visible = options?.renderMode !== "wireframe";
+            geoData.transform = partsData.transform;
+            partsData.DrawableDataList.push(geoData);
+            partsData.id = geoData.buffer.geomid;
           }
+
           if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.EDGE) {
-            const _geoData = new piqiu3d.GeoDataDrawable({ buffer });
-            _geoData.visible =
+            const geoData = new piqiu3d.GeoDataDrawable({ buffer });
+            geoData.visible =
               options?.renderMode === "wireframe" ||
               options?.renderMode === "surface_with_wireframe";
-            _geoData.fboType = piqiu3d.FBOType.line;
-            _geoData.color = piqiu3d.defaultLineColor;
-            _geoData.geoType = piqiu3d.DRAW.wire;
-            _geoData._draw = [piqiu3d.DRAW.wire];
-            _geoData.transform = partsData.transform;
-            partsData.DrawableDataList.push(_geoData);
-            partsData.id = _geoData.buffer.geomid;
+            geoData.fboType = piqiu3d.FBOType.line;
+            geoData.color = piqiu3d.defaultLineColor;
+            geoData.geoType = piqiu3d.DRAW.wire;
+            geoData._draw = [piqiu3d.DRAW.wire];
+            geoData.transform = partsData.transform;
+            partsData.DrawableDataList.push(geoData);
+            partsData.id = geoData.buffer.geomid;
           }
+
           if (partDataBuffer.subShapeType === piqiu3d.SubShapeType.VERTEX) {
-            const _geoData = new piqiu3d.GeoDataDrawable({ buffer });
-            _geoData.visible = false;
-            _geoData.fboType = piqiu3d.FBOType.point;
-            _geoData.geoType = piqiu3d.DRAW.point;
-            _geoData._draw = [piqiu3d.DRAW.point];
-            _geoData.transform = partsData.transform;
-            partsData.DrawableDataList.push(_geoData);
-            partsData.id = _geoData.buffer.geomid;
+            const geoData = new piqiu3d.GeoDataDrawable({ buffer });
+            geoData.visible = false;
+            geoData.fboType = piqiu3d.FBOType.point;
+            geoData.geoType = piqiu3d.DRAW.point;
+            geoData._draw = [piqiu3d.DRAW.point];
+            geoData.transform = partsData.transform;
+            partsData.DrawableDataList.push(geoData);
+            partsData.id = geoData.buffer.geomid;
           }
         }
+
         if (buffer instanceof piqiu3d.MeshDataBuffer) {
-          const _meshData = new piqiu3d.MeshDataDrawable({ buffer });
+          const meshData = new piqiu3d.MeshDataDrawable({ buffer });
+
           if (options?.renderMode === "wireframe") {
-            _meshData.draw = [piqiu3d.DRAW.edge];
+            meshData.draw = [piqiu3d.DRAW.edge];
           } else if (options?.renderMode === "surface") {
-            _meshData.draw = [piqiu3d.DRAW.surface];
+            meshData.draw = [piqiu3d.DRAW.surface];
           } else {
-            _meshData.draw = [piqiu3d.DRAW.surface, piqiu3d.DRAW.edge];
+            meshData.draw = [piqiu3d.DRAW.surface, piqiu3d.DRAW.edge];
           }
-          _meshData.transform = partsData.transform;
-          _meshData.visible = true;
-          partsData.DrawableDataList.push(_meshData);
-          partsData.id = _meshData.buffer.id;
+
+          meshData.transform = partsData.transform;
+          meshData.visible = true;
+          partsData.DrawableDataList.push(meshData);
+          partsData.id = meshData.buffer.id;
         }
+
         if (buffer instanceof piqiu3d.PostDataBuffer) {
-          const _postData = new piqiu3d.PostDataDrawable({
+          const postData = new piqiu3d.PostDataDrawable({
             buffer,
           });
+
           if (options?.scalarSelect && options.scalarSelect.length >= 2) {
             if (options?.frameIndex !== undefined) {
-              _postData.setScalarByScalarIndex(
+              postData.setScalarByScalarIndex(
                 options?.scalarSelect,
                 options.frameIndex,
               );
             } else {
-              _postData.setScalarByScalarIndex(options?.scalarSelect);
+              postData.setScalarByScalarIndex(options?.scalarSelect);
             }
           }
+
           if (options?.renderMode === "wireframe") {
-            _postData.draw = [piqiu3d.DRAW.edge];
+            postData.draw = [piqiu3d.DRAW.edge];
           } else if (options?.renderMode === "surface") {
-            _postData.draw = [piqiu3d.DRAW.post];
+            postData.draw = [piqiu3d.DRAW.post];
           } else {
-            _postData.draw = [piqiu3d.DRAW.post, piqiu3d.DRAW.edge];
+            postData.draw = [piqiu3d.DRAW.post, piqiu3d.DRAW.edge];
           }
-          _postData.transform = partsData.transform;
-          partsData.DrawableDataList.push(_postData);
-          this.postDataDrawables.push(_postData);
+
+          postData.transform = partsData.transform;
+          partsData.DrawableDataList.push(postData);
+          this.postDataDrawables.push(postData);
         }
       });
+
       const source = get(partDataBuffer, "json");
       const sourceObject =
         source && typeof source === "object" ? (source as object) : undefined;
+
       let part = sourceObject ? partBySource.get(sourceObject) : undefined;
+
       if (!part) {
         part = new piqiu3d.Part();
         const sourceName = String(get(source, "name", "") || "").trim();
         const sourceId =
           get(source, "id") ?? get(source, "geomid") ?? `part-${i}`;
+
         part.name = sourceName || `Part ${createdPartCount + 1}`;
         part.id = String(sourceId);
+
         if (sourceObject) {
           partBySource.set(sourceObject, part);
         }
+
         this.addPart(part);
         createdPartCount++;
       }
+
       partsData.addDrawablesToPart(part);
-      console.log("loading part drawable", i, "/", partBuffer.length);
     }
-    this.boundingBox = new piqiu3d.BoundingBox(
-      vec3.fromValues(
-        data?.database.boundingBox?.min[0] as number,
-        data?.database.boundingBox?.min[1] as number,
-        data?.database.boundingBox?.min[2] as number,
-      ),
-      vec3.fromValues(
-        data?.database.boundingBox?.max[0] as number,
-        data?.database.boundingBox?.max[1] as number,
-        data?.database.boundingBox?.max[2] as number,
-      ),
-    );
-    console.log(this.boundingBox);
+
+    // 设置边界框
+    if (data?.database?.boundingBox) {
+      this.boundingBox = new piqiu3d.BoundingBox(
+        vec3.fromValues(
+          data.database.boundingBox.min[0] as number,
+          data.database.boundingBox.min[1] as number,
+          data.database.boundingBox.min[2] as number,
+        ),
+        vec3.fromValues(
+          data.database.boundingBox.max[0] as number,
+          data.database.boundingBox.max[1] as number,
+          data.database.boundingBox.max[2] as number,
+        ),
+      );
+    }
+
     if (options?.renderMode) {
       this.lastSimulationRenderMode = options.renderMode;
     }
   }
 
+  /**
+   * 更新仿真标量
+   */
   updateSimulationScalar(options: {
     scalarSelect?: [number, number];
     frameIndex?: number;
     renderMode?: RenderMode;
   }): boolean {
     if (this.postDataDrawables.length === 0) return false;
+
     if (
       options.renderMode &&
       this.lastSimulationRenderMode &&
@@ -320,19 +418,24 @@ export class Piqiu3DRenderer {
     ) {
       return false;
     }
+
     if (!options.scalarSelect || options.scalarSelect.length < 2) return false;
+
     this.postDataDrawables.forEach((drawable) => {
       drawable.updateScalarByScalarIndex(
         options.scalarSelect,
         options.frameIndex,
       );
     });
+
     this.requestRender();
     return true;
   }
 
-  // 娣诲姞閫氱敤浜嬩欢鐩戝惉鍣?
-  addGeneralEventListener() {
+  /**
+   * 添加通用事件监听
+   */
+  addGeneralEventListener(): void {
     this.addMouseEventListener();
     this.addMouseWheelEventListener();
     this.addWindowResizeListener();
@@ -340,21 +443,35 @@ export class Piqiu3DRenderer {
     this.resizeToDisplay();
   }
 
-  addMouseEventListener() {
+  /**
+   * 添加鼠标事件监听
+   */
+  addMouseEventListener(): void {
     this.mouseHandler.bindEvents(this.canvas);
   }
 
-  addMouseWheelEventListener() {
+  /**
+   * 添加滚轮事件监听
+   */
+  addMouseWheelEventListener(): void {
     this.canvas.addEventListener("wheel", this.handleWheel, false);
   }
 
-  addWindowResizeListener() {
+  /**
+   * 添加窗口大小变化监听
+   */
+  addWindowResizeListener(): void {
     window.addEventListener("resize", this.handleResize);
   }
 
-  // 鏇存柊鐩告満浣嶇疆浠ラ€傚簲褰撳墠鍦烘櫙
-  updateCamera() {
-    const resetTool = new piqiu3d.ResetTool(this.builtInUniforms);
+  /**
+   * 更新相机位置以适应场景
+   */
+  updateCamera(): void {
+    // 复用或创建 ResetTool
+    if (!this.resetTool) {
+      this.resetTool = new piqiu3d.ResetTool(this.builtInUniforms);
+    }
 
     if (
       this.boundingBox === undefined ||
@@ -370,25 +487,36 @@ export class Piqiu3DRenderer {
       return;
     }
 
-    resetTool.home(this.boundingBox);
-
+    this.resetTool.home(this.boundingBox);
     this.model.update(true);
     this.requestRender();
   }
 
-  removeMouseEventListener() {
+  /**
+   * 移除鼠标事件监听
+   */
+  removeMouseEventListener(): void {
     this.mouseHandler.unbindEvents(this.canvas);
   }
 
-  removeMouseWheelEventListener() {
+  /**
+   * 移除滚轮事件监听
+   */
+  removeMouseWheelEventListener(): void {
     this.canvas.removeEventListener("wheel", this.handleWheel, false);
   }
 
-  removeWindowResizeListener() {
+  /**
+   * 移除窗口大小变化监听
+   */
+  removeWindowResizeListener(): void {
     window.removeEventListener("resize", this.handleResize);
   }
 
-  removeGeneralEventListener() {
+  /**
+   * 移除通用事件监听
+   */
+  removeGeneralEventListener(): void {
     this.removeMouseEventListener();
     this.removeMouseWheelEventListener();
     this.removeWindowResizeListener();
@@ -396,7 +524,7 @@ export class Piqiu3DRenderer {
   }
 
   /**
-   * 璁剧疆鐢诲竷澶у皬
+   * 设置画布大小
    */
   public setSize(width: number, height: number): void {
     if (width <= 0 || height <= 0) {
@@ -409,26 +537,37 @@ export class Piqiu3DRenderer {
   }
 
   /**
-   * 娓呯悊璧勬簮锛岄槻姝㈠唴瀛樻硠婕?
+   * 释放资源
    */
   public dispose(): void {
-    // 鎵цpiqiu3d鍐呴儴鎵€闇€鐨勬竻鐞嗘搷浣?
-    // 渚嬪锛歵his.scene.remove(this.renderPass);
+    // 取消待处理的渲染请求
     if (this.pendingRender !== null) {
       window.cancelAnimationFrame(this.pendingRender);
       this.pendingRender = null;
     }
+
+    // 清理 Tool 实例
+    this.wheelZoomTool = null;
+    this.resetTool = null;
+
     console.log("Piqiu3DRenderer disposed.");
   }
 
+  /**
+   * 启动 ResizeObserver
+   */
   private startResizeObserver(): void {
     if (this.resizeObserver || typeof ResizeObserver === "undefined") return;
+
     this.resizeObserver = new ResizeObserver(() => {
       this.resizeToDisplay();
     });
     this.resizeObserver.observe(this.canvas.parentElement ?? this.canvas);
   }
 
+  /**
+   * 停止 ResizeObserver
+   */
   private stopResizeObserver(): void {
     if (!this.resizeObserver) return;
     this.resizeObserver.disconnect();
