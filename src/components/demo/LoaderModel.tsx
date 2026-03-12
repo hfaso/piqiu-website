@@ -43,7 +43,7 @@ export default function CanvasContainer({ source }: Props) {
         piqiuRenderer.removeGeneralEventListener();
         piqiuRenderer.dispose();
       } catch (e) {
-        // 忽略清理错误
+        void e; // 忽略清理错误
       }
     };
   }, []);
@@ -62,7 +62,7 @@ export default function CanvasContainer({ source }: Props) {
     }
 
     if (!source) {
-      src = `${import.meta.env.BASE_URL}models/bird.glb`;
+      src = `${import.meta.env.BASE_URL}models/engine.glb`;
     } else if (typeof source === "string") {
       src = source;
     } else {
@@ -86,7 +86,7 @@ export default function CanvasContainer({ source }: Props) {
           }
         }
       } catch (e) {
-        // ignore
+        void e; // ignore
       }
 
       try {
@@ -104,7 +104,7 @@ export default function CanvasContainer({ source }: Props) {
         piqiuRenderer.updateCamera();
         setPartTree(piqiuRenderer.getPartTree());
       } catch (e) {
-        // ignore
+        void e; // ignore
       } finally {
         if (
           !canceled &&
