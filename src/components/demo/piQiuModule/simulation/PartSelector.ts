@@ -576,6 +576,8 @@ export class PartSelector {
   private createIdModelWithEffect(originalModel: any): piqiu3d.Model | null {
     const idModel = new piqiu3d.Model();
     this.originalEffects.clear();
+    // 清空并重建映射
+    this.partIndexToIdMap.clear();
 
     console.log("DEBUG Original model:", originalModel);
     console.log(
@@ -604,6 +606,16 @@ export class PartSelector {
           console.log("DEBUG Skipping invisible part:", node.name);
           return;
         }
+
+        // 存储顺序索引到原始 ID 的映射
+        const originalPartId = String(node.id);
+        this.partIndexToIdMap.set(partIndex, originalPartId);
+        console.log(
+          "DEBUG Mapped partIndex",
+          partIndex,
+          "-> original ID:",
+          originalPartId,
+        );
 
         const idColor = this.getIdColor(partIndex);
         console.log("DEBUG Part", partIndex, "color:", {
@@ -697,12 +709,46 @@ export class PartSelector {
   }
 
   /**
-   * 高亮选中的 Part
+   * 存储 Part 的顺序索引到原始 ID 的映射
+   * 用于在拾取时正确匹配
+   */
+  private partIndexToIdMap: Map<number, string> = new Map();
+
+  /**
+   * 存储高亮前的原始 effect，用于取消高亮
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private highlightedEffects: Map<any, any> = new Map();
+
+  /**
+   * 记录当前高亮的部件 ID
+   */
+  private currentHighlightedPartId: number | null = null;
+
+  /**
+   * 高亮选中的 Part - 保持所有部件可见，只将被选中的部件变红
+   * 如果点击同一个部件，则取消高亮（恢复原始颜色）
    */
   private highlightPart(model: piqiu3d.Model, partId: number): void {
-    console.log("Highlighting part with ID:", partId);
+    console.log("Highlighting part with sequential ID:", partId);
 
-    // 简单高亮策略：只显示被选中的 Part，隐藏其它 Part
+    // 从映射中获取原始 ID
+    const originalPartId = this.partIndexToIdMap.get(partId);
+    console.log("Mapping to original part ID:", originalPartId);
+
+    // 如果点击的是同一个部件，取消高亮
+    if (this.currentHighlightedPartId === partId) {
+      console.log("Same part clicked, clearing highlight");
+      this.clearHighlight();
+      this.currentHighlightedPartId = null;
+      model.update(true);
+      this.onRender();
+      return;
+    }
+
+    // 先恢复之前高亮的部件效果
+    this.clearHighlight();
+
     // 使用 getter 循环遍历 model 的所有 part
     const parts: piqiu3d.Part[] = [];
     model.forEach((node: any) => {
@@ -711,12 +757,50 @@ export class PartSelector {
       }
     });
 
+    // 创建红色高亮材质
+    const highlightColor = new piqiu3d.Color(1, 0, 0, 1); // 红色
+    const highlightMaterial = new piqiu3d.ColorMaterial(highlightColor);
+    const highlightEffect = highlightMaterial.init();
+
+    // 遍历所有部件，将选中的部件变为红色，其他保持原状
     parts.forEach((part) => {
-      part.visible = Number(part.id) === partId;
+      const partOriginalId = String(part.id);
+      const isSelected = partOriginalId === originalPartId;
+
+      // 所有部件都保持可见
+      part.visible = true;
+
+      // 如果是被选中的部件，替换其 effect 为红色
+      if (isSelected && part.drawables) {
+        console.log(`Highlighting part "${part.name}" (id: ${partOriginalId})`);
+
+        for (const d of part.drawables) {
+          if (d && d.visible) {
+            // 保存原始 effect 以便后续恢复
+            this.highlightedEffects.set(d, d.effect);
+            // 替换为红色高亮 effect
+            d.effect = highlightEffect;
+          }
+        }
+      }
     });
 
-    model.update();
+    // 记录当前高亮的部件 ID
+    this.currentHighlightedPartId = partId;
+
+    // 使用 true 参数标记结构已更改
+    model.update(true);
     this.onRender();
+  }
+
+  /**
+   * 清除高亮效果，恢复原始颜色
+   */
+  private clearHighlight(): void {
+    this.highlightedEffects.forEach((effect, drawable) => {
+      drawable.effect = effect;
+    });
+    this.highlightedEffects.clear();
   }
 
   /**
