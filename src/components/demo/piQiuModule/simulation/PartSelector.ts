@@ -221,6 +221,9 @@ export class PartSelector {
     const offscreenPass = this.pickFBO as piqiu3d.OffScreenPass;
     if (!offscreenPass) return;
 
+    // 确保 FBO 尺寸正确
+    (offscreenPass as any).size = [this.canvasWidth, this.canvasHeight];
+
     // 设置相机
     offscreenPass.camera.builtInUniforms = camera.builtInUniforms;
 
@@ -301,53 +304,6 @@ export class PartSelector {
 
     const pixel = new Uint8Array(4);
     gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-
-    // If possible, also read full FBO buffer via its read() API and sample the same pixel for cross-check
-    try {
-      if (fboData && typeof fboData.read === "function") {
-        const fboRead = fboData.read();
-        if (fboRead && fboRead.data) {
-          const fW = fboRead.width;
-          const fH = fboRead.height;
-          const fData = fboRead.data as Uint8Array;
-
-          // Two possible row orders: bottom-left origin or top-left origin — sample both
-          const idxBottom = (y * fW + x) * 4; // assuming bottom-left origin
-          const idxTop = ((fH - 1 - y) * fW + x) * 4; // assuming top-left origin
-
-          const sampleBottom = fData.slice(idxBottom, idxBottom + 4);
-          const sampleTop = fData.slice(idxTop, idxTop + 4);
-
-          const sb = Array.from(sampleBottom);
-          const st = Array.from(sampleTop);
-
-          const idFromGLRead = this.parseIdFromColor(pixel);
-          const idFromFboBottom = this.parseIdFromColor(sampleBottom);
-          const idFromFboTop = this.parseIdFromColor(sampleTop);
-
-          console.log(
-            "FBO read() sample (bottom-origin):",
-            sb,
-            "parsedId:",
-            idFromFboBottom,
-          );
-          console.log(
-            "FBO read() sample (top-origin):",
-            st,
-            "parsedId:",
-            idFromFboTop,
-          );
-          console.log(
-            "gl.readPixels sample:",
-            Array.from(pixel),
-            "parsedId:",
-            idFromGLRead,
-          );
-        }
-      }
-    } catch (err) {
-      console.warn("FBO read compare failed:", err);
-    }
 
     // 检查 WebGL 错误
     const glError = gl.getError();
