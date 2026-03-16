@@ -6,6 +6,7 @@
 import * as piqiu3d from "piqiu3d";
 import { get } from "lodash";
 import { MouseHandler } from "./handler/MouseHandler";
+import { PartSelector } from "./simulation/PartSelector";
 import { vec2, vec3 } from "gl-matrix";
 import type { PartNode, SimulationData } from "./types";
 
@@ -42,6 +43,12 @@ export class Piqiu3DRenderer {
   // 预创建的 Tool 实例（性能优化）
   private wheelZoomTool: piqiu3d.WheelZoomTool | null = null;
   private resetTool: piqiu3d.ResetTool | null = null;
+
+  // Part 选择器
+  private partSelector: PartSelector | null = null;
+
+  // Hover Pass 实例 (悬停效果)
+  private hoverPassInstance: piqiu3d.HoverPassInstance | null = null;
 
   /**
    * 请求渲染
@@ -167,6 +174,81 @@ export class Piqiu3DRenderer {
     this.canvas.oncontextmenu = (event) => {
       event.preventDefault();
     };
+  }
+
+  /**
+   * 初始化选择器 - 添加 renderContext 参数
+   */
+  initSelector(): void {
+    this.partSelector = new PartSelector(
+      this.renderPass,
+      this.requestRender,
+      this.renderContext,
+    );
+    this.mouseHandler.setSelector(this.partSelector);
+    console.log("PartSelector initialized with renderContext");
+  }
+
+  /**
+   * 初始化 HoverPass 悬停效果
+   */
+  initHoverPass(database?: any, data?: any): void {
+    // 获取模型数据
+    const modelData = database?.model;
+    if (!modelData) {
+      console.warn("initHoverPass: database.model is missing");
+      return;
+    }
+
+    if (!Array.isArray(modelData.parts)) {
+      console.warn("initHoverPass: database.model.parts is missing, use []");
+      modelData.parts = [];
+    }
+
+    // 创建 HoverPass 实例
+    this.hoverPassInstance = new piqiu3d.HoverPassInstance(
+      this.builtInUniforms,
+      this.renderContext,
+    );
+
+    try {
+      // 先创建 ID 渲染通道，并加入场景
+      const idRenderPass = this.hoverPassInstance.getIdRenderPass();
+      if (idRenderPass) {
+        this.scene.push(idRenderPass);
+      }
+
+      // 关键:确保 idRenderPass 的 size 与 canvas 大小一致（在 build 之前设置）
+      const hoverPass = this.hoverPassInstance as any;
+      if (hoverPass.idRenderPass) {
+        const canvasSize: [number, number] = [
+          this.canvas.width,
+          this.canvas.height,
+        ];
+        hoverPass.idRenderPass.size = canvasSize;
+      }
+
+      // 构建 HoverPass 的内部模型
+      this.hoverPassInstance.build(database, data || {});
+
+      // 将 hoverPass 实例传递给 MouseHandler（用于 update / getId 等）
+      this.mouseHandler.setHoverPassInstance(this.hoverPassInstance);
+
+      console.log(
+        "HoverPassInstance initialized with canvas size:",
+        this.canvas.width,
+        this.canvas.height,
+      );
+    } catch (e) {
+      console.error("HoverPassInstance build failed", e);
+    }
+  }
+
+  /**
+   * 获取 HoverPass 实例
+   */
+  getHoverPassInstance(): piqiu3d.HoverPassInstance | null {
+    return this.hoverPassInstance;
   }
 
   /**
@@ -399,6 +481,9 @@ export class Piqiu3DRenderer {
     if (options?.renderMode) {
       this.lastSimulationRenderMode = options.renderMode;
     }
+
+    // 初始化选择器
+    this.initSelector();
   }
 
   /**
@@ -549,6 +634,18 @@ export class Piqiu3DRenderer {
     // 清理 Tool 实例
     this.wheelZoomTool = null;
     this.resetTool = null;
+
+    // 清理选择器
+    if (this.partSelector) {
+      this.partSelector.dispose();
+      this.partSelector = null;
+    }
+
+    // 清理 HoverPass 实例
+    if (this.hoverPassInstance) {
+      this.hoverPassInstance.dispose();
+      this.hoverPassInstance = null;
+    }
 
     console.log("Piqiu3DRenderer disposed.");
   }

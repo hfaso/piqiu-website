@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import * as piqiu3d from "piqiu3d";
 import {
   Piqiu3DRenderer,
@@ -17,7 +23,9 @@ export default function CanvasContainer({ source }: Props) {
   const objectUrlRef = useRef<string | null>(null);
   const simulationDataRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [renderMode, setRenderMode] = useState<RenderMode>("surface_with_wireframe");
+  const [renderMode, setRenderMode] = useState<RenderMode>(
+    "surface_with_wireframe",
+  );
   const [partTree, setPartTree] = useState<PartNode[]>([]);
   const renderModeRef = useRef<RenderMode>("surface_with_wireframe");
 
@@ -104,7 +112,9 @@ export default function CanvasContainer({ source }: Props) {
       try {
         const { data, ArrayBuffer } = await piqiu3d.Loader.loadZip(src);
         if (canceled || rendererRef.current !== piqiuRenderer) return;
-        const { database } = new piqiu3d.LoadDataBase(data, "surface");
+        // 使用 LoadDataBase 解析数据
+        const loadDb = new piqiu3d.LoadDataBase(data, "surface");
+        const { database } = loadDb;
         const res = {
           ...data,
           database,
@@ -113,7 +123,7 @@ export default function CanvasContainer({ source }: Props) {
         simulationDataRef.current = res;
         applySimulationData(res, true, renderModeRef.current);
       } catch (e) {
-        // ignore
+        console.error("loadModel failed", e);
       } finally {
         if (!canceled && rendererRef.current === piqiuRenderer) {
           setIsLoading(false);
