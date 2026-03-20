@@ -16,9 +16,8 @@ export class PartSelector {
   // 渲染回调
   private onRender: () => void;
 
-  // FBO
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private pickFBO: any = null;
+  // ============ 优化：使用 PickPass (小 FBO + Scissor) ============
+  private pickPass: any = null;
 
   // 画布尺寸
   private canvasWidth: number = 0;
@@ -26,6 +25,35 @@ export class PartSelector {
 
   // 是否已初始化
   private initialized: boolean = false;
+
+  // 缓存：预渲染的 ID 模型
+  private cachedIdModel: piqiu3d.Model | null = null;
+
+  // 缓存：FBO 是否需要更新（模型变化时设为 true）
+  private fboDirty: boolean = true;
+
+  // 当前模型的 part 数量，用于检测模型变化
+  private cachedModelPartCount: number = 0;
+
+  // 小 FBO 尺寸（拾取区域大小）
+  private readonly PICK_FBO_SIZE = 32;
+
+  // 缓存：是否已将 ID Model 绑定到 pickPass
+  private pickModelAttached: boolean = false;
+
+  // 异步拾取：避免 readPixels 阻塞当帧
+  private pendingPickToken: number = 0;
+  private pendingPickHandle: number | null = null;
+
+  // 复用 ID effect，避免重复创建
+  private idEffectCache: Map<number, any> = new Map();
+
+  // BVH 射线预筛选（减少渲染负载）
+  private rayIntersector: piqiu3d.RayIntersector | null = null;
+  private rayDirty: boolean = true;
+  private rayBuildPending: boolean = false;
+  private rayBuildHandle: number | null = null;
+  private readonly MAX_PREFILTER_PARTS = 256;
 
   constructor(
     renderPass: piqiu3d.RenderPass,
@@ -58,9 +86,26 @@ export class PartSelector {
     const cssWidth = canvas.clientWidth;
     const cssHeight = canvas.clientHeight;
 
-    // 如果 FBO 已创建,更新其尺寸
-    if (this.pickFBO) {
-      (this.pickFBO as any).size = [this.canvasWidth, this.canvasHeight];
+    // 如果 PickPass 已创建,更新其尺寸
+    if (this.pickPass) {
+      const pickW = Math.max(1, Math.min(this.PICK_FBO_SIZE, this.canvasWidth));
+      const pickH = Math.max(
+        1,
+        Math.min(this.PICK_FBO_SIZE, this.canvasHeight),
+      );
+      const fbo = (this.pickPass as any).fbo;
+      if (fbo) {
+        fbo.size = [pickW, pickH];
+      } else {
+        (this.pickPass as any).size = [pickW, pickH];
+      }
+      // 视口保持为主画布大小，避免影响投影比例
+      if ((this.pickPass as any).camera?.viewport) {
+        (this.pickPass as any).camera.viewport.size = [
+          this.canvasWidth,
+          this.canvasHeight,
+        ];
+      }
     }
 
     console.log("DEBUG Canvas size info:", {
@@ -103,22 +148,32 @@ export class PartSelector {
 
     console.log("DEBUG Canvas size:", this.canvasWidth, "x", this.canvasHeight);
 
-    // 使用 OffScreenPass
-    this.pickFBO = new piqiu3d.OffScreenPass({
+    // 使用 OffScreenPass（全尺寸 FBO，确保稳定性）
+    this.pickPass = new piqiu3d.OffScreenPass({
       color: [0, 0, 0, 0],
       depth: 1.0,
     });
 
     // 设置 FBO 尺寸与 canvas 一致
-    (this.pickFBO as any).size = [this.canvasWidth, this.canvasHeight];
+    const pickW = Math.max(1, Math.min(this.PICK_FBO_SIZE, this.canvasWidth));
+    const pickH = Math.max(1, Math.min(this.PICK_FBO_SIZE, this.canvasHeight));
+    const fbo = (this.pickPass as any).fbo;
+    if (fbo) {
+      fbo.size = [pickW, pickH];
+    } else {
+      (this.pickPass as any).size = [pickW, pickH];
+    }
+    if ((this.pickPass as any).camera?.viewport) {
+      (this.pickPass as any).camera.viewport.size = [
+        this.canvasWidth,
+        this.canvasHeight,
+      ];
+    }
 
-    console.log("DEBUG OffScreenPass created:", {
-      hasSize: !!(this.pickFBO as any).size,
-      sizeValue: (this.pickFBO as any).size,
-      hasFbo: !!(this.pickFBO as any).fbo,
-    });
+    console.log("DEBUG OffScreenPass created");
 
     this.initialized = true;
+    this.pickModelAttached = false;
     console.log("Pick FBO initialized");
   }
 
@@ -172,6 +227,17 @@ export class PartSelector {
       return;
     }
 
+    // 模型结构变化时，标记缓存失效
+    if (this.cachedIdModel && this.cachedModelPartCount !== model.size) {
+      this.fboDirty = true;
+      this.pickModelAttached = false;
+      this.rayDirty = true;
+    }
+
+    if (this.rayDirty && !this.rayBuildPending) {
+      this.scheduleRayBuild(model, camera.builtInUniforms);
+    }
+
     const gl = this.renderContext.gl;
     if (!gl) {
       console.error("WebGL context not available");
@@ -202,7 +268,7 @@ export class PartSelector {
       scale: [scaleX, scaleY],
       convertedGlPos: [glX, glY],
       modelSize: model.size,
-      fboReady: !!this.pickFBO,
+      fboReady: !!this.pickPass,
     });
 
     // 渲染到 FBO 并读取结果（使用转换后的GL坐标）
@@ -210,7 +276,70 @@ export class PartSelector {
   }
 
   /**
-   * 渲染并拾取
+   * 创建 ID 模型（每次都创建新的，避免缓存问题）
+   */
+  // 每次都创建新的 ID 模型，确保状态干净
+
+  /**
+   * 缓存并复用 ID 模型，避免每次点击都重建
+   */
+  private ensureIdModel(
+    model: piqiu3d.Model,
+    offscreenPass: any,
+  ): piqiu3d.Model | null {
+    if (this.fboDirty || !this.cachedIdModel) {
+      this.cachedIdModel = this.createIdModelWithEffect(model);
+      this.cachedModelPartCount = this.cachedIdModel
+        ? this.cachedIdModel.size
+        : 0;
+      this.fboDirty = false;
+      this.pickModelAttached = false;
+    }
+
+    if (!this.cachedIdModel) return null;
+
+    if (!this.pickModelAttached) {
+      offscreenPass.model.clear();
+      offscreenPass.model.add(this.cachedIdModel);
+      offscreenPass.model.update(true);
+      this.pickModelAttached = true;
+    }
+
+    return this.cachedIdModel;
+  }
+
+  private scheduleRayBuild(
+    model: piqiu3d.Model,
+    builtInUniforms: piqiu3d.BuiltInUniforms,
+  ): void {
+    this.rayBuildPending = true;
+    const build = () => {
+      try {
+        if (!this.rayIntersector) {
+          this.rayIntersector = new piqiu3d.RayIntersector(builtInUniforms);
+        }
+        this.rayIntersector.setModel(model);
+        this.rayDirty = false;
+      } catch (err) {
+        console.warn("Ray build failed", err);
+      } finally {
+        this.rayBuildPending = false;
+        this.rayBuildHandle = null;
+      }
+    };
+
+    const ric = (window as any).requestIdleCallback as
+      | ((cb: () => void, opts?: { timeout?: number }) => number)
+      | undefined;
+    if (ric) {
+      this.rayBuildHandle = ric(build, { timeout: 1000 });
+    } else {
+      this.rayBuildHandle = window.setTimeout(build, 0);
+    }
+  }
+
+  /**
+   * 渲染并拾取 - 使用 OffScreenPass（全尺寸 FBO）
    */
   private renderAndPick(
     gl: WebGL2RenderingContext,
@@ -218,34 +347,94 @@ export class PartSelector {
     camera: piqiu3d.Camera,
     pos: vec2,
   ): void {
-    const offscreenPass = this.pickFBO as piqiu3d.OffScreenPass;
+    const offscreenPass = this.pickPass;
     if (!offscreenPass) return;
 
     // 确保 FBO 尺寸正确
-    (offscreenPass as any).size = [this.canvasWidth, this.canvasHeight];
+    const pickW = Math.max(1, Math.min(this.PICK_FBO_SIZE, this.canvasWidth));
+    const pickH = Math.max(1, Math.min(this.PICK_FBO_SIZE, this.canvasHeight));
+    const fbo = (offscreenPass as any).fbo;
+    if (fbo) {
+      fbo.size = [pickW, pickH];
+    } else {
+      (offscreenPass as any).size = [pickW, pickH];
+    }
+    if ((offscreenPass as any).camera?.viewport) {
+      (offscreenPass as any).camera.viewport.size = [
+        this.canvasWidth,
+        this.canvasHeight,
+      ];
+    }
 
     // 设置相机
     offscreenPass.camera.builtInUniforms = camera.builtInUniforms;
 
-    // 克隆原始模型并修改 effect
-    const idModel = this.createIdModelWithEffect(model);
+    // BVH 射线预筛选，减少需要渲染的部件数量
+    let idModel: piqiu3d.Model | null = null;
+    if (!this.rayDirty && this.rayIntersector && !this.rayBuildPending) {
+      try {
+        const hitParts = this.rayIntersector.hitTestPart(
+          vec2.fromValues(pos[0], pos[1]),
+        );
+        if (
+          hitParts &&
+          hitParts.length > 0 &&
+          hitParts.length <= this.MAX_PREFILTER_PARTS
+        ) {
+          idModel = this.createIdModelWithEffect(
+            model,
+            new Set(hitParts as piqiu3d.Part[]),
+          );
+          if (idModel) {
+            offscreenPass.model.clear();
+            offscreenPass.model.add(idModel);
+            offscreenPass.model.update(true);
+            this.pickModelAttached = false;
+          }
+        }
+      } catch (err) {
+        console.warn("Ray prefilter failed, fallback to full ID model", err);
+      }
+    }
+
+    if (!idModel) {
+      idModel = this.ensureIdModel(model, offscreenPass);
+    }
     if (!idModel) {
       console.error("Failed to create ID model");
       return;
     }
 
-    // 添加到 offscreen pass - 使用正确的 API 访问 model
-    offscreenPass.model.clear();
-    offscreenPass.model.add(idModel);
-    offscreenPass.model.update();
-
-    console.log("DEBUG Before render - FBO state:", {
-      enabled: offscreenPass.enabled,
-      modelSize: offscreenPass.model.size,
-      hasFbo: !!(offscreenPass as any).fbo,
-    });
-
+    // 添加 ID 模型到 offscreen pass
     // 启用并渲染
+    // 使用 Scissor 仅渲染点击附近的区域
+    const clickX = Math.max(
+      0,
+      Math.min(this.canvasWidth - 1, Math.floor(pos[0])),
+    );
+    const clickY = Math.max(
+      0,
+      Math.min(this.canvasHeight - 1, Math.floor(this.canvasHeight - pos[1])),
+    );
+    const viewport = (offscreenPass as any).camera?.viewport;
+    const prevViewportPos: [number, number] | null = viewport
+      ? viewport.pos
+      : null;
+    const prevViewportSize: [number, number] | null = viewport
+      ? viewport.size
+      : null;
+    if (viewport) {
+      viewport.pos = [
+        Math.floor(-clickX + pickW / 2),
+        Math.floor(-clickY + pickH / 2),
+      ];
+      viewport.size = [this.canvasWidth, this.canvasHeight];
+    }
+
+    const wasScissorEnabled = gl.isEnabled(gl.SCISSOR_TEST);
+    const prevScissor = gl.getParameter(gl.SCISSOR_BOX) as Int32Array;
+    if (wasScissorEnabled) gl.disable(gl.SCISSOR_TEST);
+
     offscreenPass.enabled = true;
     try {
       offscreenPass.render();
@@ -253,115 +442,119 @@ export class PartSelector {
     } catch (e) {
       console.error("Render error:", e);
       offscreenPass.enabled = false;
+      if (wasScissorEnabled) {
+        gl.enable(gl.SCISSOR_TEST);
+        gl.scissor(
+          prevScissor[0],
+          prevScissor[1],
+          prevScissor[2],
+          prevScissor[3],
+        );
+      } else {
+        gl.disable(gl.SCISSOR_TEST);
+      }
+      if (viewport && prevViewportPos && prevViewportSize) {
+        viewport.pos = prevViewportPos;
+        viewport.size = prevViewportSize;
+      }
       return;
     }
 
     // 确保渲染完成
     gl.flush();
 
-    // 关键: 读取像素前，确保 FBO 的 framebuffer 被绑定
+    // 恢复 scissor 状态
+    if (wasScissorEnabled) {
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(
+        prevScissor[0],
+        prevScissor[1],
+        prevScissor[2],
+        prevScissor[3],
+      );
+    } else {
+      gl.disable(gl.SCISSOR_TEST);
+    }
+    if (viewport && prevViewportPos && prevViewportSize) {
+      viewport.pos = prevViewportPos;
+      viewport.size = prevViewportSize;
+    }
+
+    // 异步读取像素，避免当帧 GPU→CPU 阻塞
     const fboData = (offscreenPass as any).fbo;
-    if (fboData && fboData.framebuffer) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fboData.framebuffer);
-      console.log("DEBUG FBO framebuffer bound for pixel reading");
-    } else if (fboData && typeof fboData.bind === "function") {
-      fboData.bind();
-      console.log("DEBUG FBO bind() called");
-    } else {
-      console.warn("DEBUG FBO framebuffer not found");
+    const token = ++this.pendingPickToken;
+    if (this.pendingPickHandle !== null) {
+      cancelAnimationFrame(this.pendingPickHandle);
     }
+    const pickWidth = pickW;
+    const pickHeight = pickH;
+    this.pendingPickHandle = requestAnimationFrame(() => {
+      if (token !== this.pendingPickToken) return;
+      this.pendingPickHandle = null;
 
-    // 读取像素坐标转换
-    // pos 已经是GL坐标系(原点左上角)，需要转换为WebGL坐标系(原点左下角)
-    const x = Math.floor(pos[0]);
-    const y = Math.floor(this.canvasHeight - pos[1]);
+      if (fboData && fboData.framebuffer) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fboData.framebuffer);
+      } else if (fboData && typeof fboData.bind === "function") {
+        fboData.bind();
+      } else {
+        console.warn("DEBUG FBO framebuffer not found");
+        return;
+      }
 
-    console.log("DEBUG Pixel reading parameters:", {
-      glPos: [pos[0], pos[1]],
-      readPixelsCoords: [x, y],
-      canvasSize: [this.canvasWidth, this.canvasHeight],
-      inBounds: !(
-        x < 0 ||
-        x >= this.canvasWidth ||
-        y < 0 ||
-        y >= this.canvasHeight
-      ),
-    });
+      const x = Math.floor(pickWidth / 2);
+      const y = Math.floor(pickHeight / 2);
 
-    // 边界检查
-    if (x < 0 || x >= this.canvasWidth || y < 0 || y >= this.canvasHeight) {
-      console.warn("ERROR: Click position outside canvas bounds!", {
-        x,
-        y,
-        canvasWidth: this.canvasWidth,
-        canvasHeight: this.canvasHeight,
-      });
+      const pixel = new Uint8Array(4);
+      gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+      const glError = gl.getError();
+      if (glError !== gl.NO_ERROR) {
+        console.error("WebGL error during readPixels:", glError);
+      }
+
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      offscreenPass.enabled = false;
-      this.restoreOriginalEffects();
-      return;
-    }
 
-    const pixel = new Uint8Array(4);
-    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+      const partId = this.parseIdFromColor(pixel);
 
-    // 检查 WebGL 错误
-    const glError = gl.getError();
-    if (glError !== gl.NO_ERROR) {
-      console.error("WebGL error during readPixels:", glError);
-    }
+      console.log("鈻堚枅鈻堚枅 PICK RESULT 鈻堚枅鈻堚枅", {
+        glCoords: [pos[0], pos[1]],
+        readPixelsCoords: [x, y],
+        pixelColor: {
+          r: pixel[0],
+          g: pixel[1],
+          b: pixel[2],
+          a: pixel[3],
+        },
+        colorArray: Array.from(pixel),
+        partId,
+        isValid: partId > 0,
+      });
 
-    // 恢复原始 framebuffer 绑定
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-    // 恢复原始效果
-    this.restoreOriginalEffects();
-
-    // 禁用
-    offscreenPass.enabled = false;
-
-    // 解析 ID
-    const partId = this.parseIdFromColor(pixel);
-
-    // 详细输出
-    console.log("████ PICK RESULT ████", {
-      glCoords: [pos[0], pos[1]],
-      readPixelsCoords: [x, y],
-      pixelColor: {
-        r: pixel[0],
-        g: pixel[1],
-        b: pixel[2],
-        a: pixel[3],
-      },
-      colorArray: Array.from(pixel),
-      partId,
-      isValid: partId > 0,
+      if (partId > 0) {
+        console.log("鉁?Successfully selected part:", partId);
+        this.highlightPart(model, partId);
+      } else {
+        console.warn("鉁?Invalid part ID or background clicked");
+      }
     });
-
-    if (partId > 0) {
-      console.log("✓ Successfully selected part:", partId);
-      this.highlightPart(model, partId);
-    } else {
-      console.warn("✗ Invalid part ID or background clicked");
-    }
   }
 
   /**
    * 快照：渲染当前 ID/FBO 内容并下载为 PNG
    * 用于调试 FBO 内容（在中键点击时调用）
    */
-  snapshot(): void {
+  snapshot() {
     const gl = this.renderContext.gl;
     if (!gl) {
       console.error("WebGL context not available for snapshot");
       return;
     }
 
-    if (!this.pickFBO) {
+    if (!this.pickPass) {
       this.initFBO();
     }
 
-    const offscreenPass = this.pickFBO as piqiu3d.OffScreenPass;
+    const offscreenPass = this.pickPass;
     if (!offscreenPass) {
       console.error("Offscreen pass not available for snapshot");
       return;
@@ -397,8 +590,13 @@ export class PartSelector {
       const fboData = (offscreenPass as any).fbo;
       console.log("Snapshot FBO data:", fboData);
 
-      const w = this.canvasWidth;
-      const h = this.canvasHeight;
+      const pickW = Math.max(1, Math.min(this.PICK_FBO_SIZE, this.canvasWidth));
+      const pickH = Math.max(
+        1,
+        Math.min(this.PICK_FBO_SIZE, this.canvasHeight),
+      );
+      let w = pickW;
+      let h = pickH;
 
       let pixels: Uint8Array | null = null;
       // Prefer FBO's read API if available
@@ -412,6 +610,10 @@ export class PartSelector {
               width: read.width,
               height: read.height,
             });
+            if (read.width && read.height) {
+              w = read.width;
+              h = read.height;
+            }
           }
         } catch (err) {
           console.warn("fboData.read() failed:", err);
@@ -522,16 +724,16 @@ export class PartSelector {
   /**
    * 存储原始 effect 以便恢复
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private originalEffects: Map<any, any> = new Map();
 
   /**
    * 创建 ID 模型 - 通过修改原始模型的 effect
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private createIdModelWithEffect(originalModel: any): piqiu3d.Model | null {
+  private createIdModelWithEffect(
+    originalModel: any,
+    partFilter?: Set<piqiu3d.Part>,
+  ): piqiu3d.Model | null {
     const idModel = new piqiu3d.Model();
-    this.originalEffects.clear();
     // 清空并重建映射
     this.partIndexToIdMap.clear();
 
@@ -544,6 +746,15 @@ export class PartSelector {
     // 遍历原始模型的所有 Part
     let partIndex = 1;
     let successfulDrawables = 0;
+    const getIdEffect = (index: number): any => {
+      let cached = this.idEffectCache.get(index);
+      if (cached) return cached;
+      const idColor = this.getIdColor(index);
+      const colorMaterial = new piqiu3d.ColorMaterial(idColor);
+      cached = colorMaterial.init();
+      this.idEffectCache.set(index, cached);
+      return cached;
+    };
     try {
       originalModel.forEach((node: piqiu3d.Part) => {
         console.log(
@@ -560,6 +771,9 @@ export class PartSelector {
         // 跳过不可见的 part
         if (!node.visible) {
           console.log("DEBUG Skipping invisible part:", node.name);
+          return;
+        }
+        if (partFilter && !partFilter.has(node)) {
           return;
         }
 
@@ -581,9 +795,8 @@ export class PartSelector {
           a: idColor.a,
         });
 
-        // 创建纯色材质
-        const colorMaterial = new piqiu3d.ColorMaterial(idColor);
-        const effect = colorMaterial.init();
+        // 复用纯色材质 effect
+        const effect = getIdEffect(partIndex);
 
         // 获取原始 Part 的所有 drawables
         const drawables = node.drawables;
@@ -591,10 +804,14 @@ export class PartSelector {
 
         if (!drawables || drawables.length === 0) return;
 
-        // 为这个 Part 创建一个新的 Part
+        // 为这个 Part 创建一个新的 Part - 使用深拷贝 transform 避免修改原始模型
         const newPart = new piqiu3d.Part();
         newPart.name = node.name;
-        newPart.transform = node.transform;
+
+        // 深拷贝 transform 矩阵，避免修改原始模型
+        if (node.transform && node.transform.matrix) {
+          newPart.transform = node.transform;
+        }
 
         // 复制 drawables 并替换 effect
         for (const d of drawables) {
@@ -621,13 +838,13 @@ export class PartSelector {
           );
 
           // 存储原始 effect
-          if (d.effect) {
-            this.originalEffects.set(d, d.effect);
-          }
 
           // 创建新 Drawable，替换 effect
-          // 注意：d.tbo 是 TransformBufferObject，需要使用 d.tbo.transform (Transform 对象)
-          const newDrawable = new piqiu3d.Drawable(d.tbo.transform);
+          // 注意：d.tbo 是 TransformBufferObject，需要深拷贝 transform 避免修改原始模型
+          const clonedTransform = d.tbo.transform
+            ? d.tbo.transform
+            : new piqiu3d.Transform();
+          const newDrawable = new piqiu3d.Drawable(clonedTransform);
           newDrawable.push(d.geometry);
           newDrawable.push(effect);
           newPart.addDrawable(newDrawable);
@@ -657,13 +874,6 @@ export class PartSelector {
   /**
    * 恢复原始 effect
    */
-  private restoreOriginalEffects(): void {
-    this.originalEffects.forEach((effect, drawable) => {
-      drawable.effect = effect;
-    });
-    this.originalEffects.clear();
-  }
-
   /**
    * 存储 Part 的顺序索引到原始 ID 的映射
    * 用于在拾取时正确匹配
@@ -760,12 +970,48 @@ export class PartSelector {
   }
 
   /**
+   * 标记缓存需要更新
+   * 当模型变化时（如重新加载），调用此方法
+   */
+  markDirty(): void {
+    this.fboDirty = true;
+    this.cachedIdModel = null;
+    this.pickModelAttached = false;
+    this.rayDirty = true;
+    console.log("DEBUG PartSelector marked as dirty");
+  }
+
+  /**
    * 释放资源
    */
   dispose(): void {
-    this.pickFBO = null;
-    this.originalEffects.clear();
+    if (this.rayBuildHandle !== null) {
+      const cic = (window as any).cancelIdleCallback as
+        | ((id: number) => void)
+        | undefined;
+      if (cic && (window as any).requestIdleCallback) {
+        cic(this.rayBuildHandle);
+      } else {
+        clearTimeout(this.rayBuildHandle);
+      }
+      this.rayBuildHandle = null;
+    }
+    if (this.pendingPickHandle !== null) {
+      cancelAnimationFrame(this.pendingPickHandle);
+      this.pendingPickHandle = null;
+    }
+    this.pickPass = null;
+    this.cachedIdModel = null;
+    this.pickModelAttached = false;
+    this.idEffectCache.clear();
+    this.rayIntersector = null;
+    this.rayDirty = true;
+    this.rayBuildPending = false;
+    this.highlightedEffects.clear();
+    this.partIndexToIdMap.clear();
     this.initialized = false;
+    this.fboDirty = true;
+    this.cachedModelPartCount = 0;
     console.log("PartSelector disposed");
   }
 }

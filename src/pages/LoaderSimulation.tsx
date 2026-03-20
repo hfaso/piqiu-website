@@ -1,6 +1,8 @@
 import "./LoaderSimulation.css";
 import "./LoaderButtons.css";
 import LoaderGeometryDemo from "../components/demo/piQiuModule/simulation/LoaderGeometry";
+import LoaderGeometryOctreeDemo from "../components/demo/piQiuModule/simulation/LoaderGeometryOctree";
+import LoaderGeometryBvhDemo from "../components/demo/piQiuModule/simulation/LoaderGeometryBvh";
 import LoaderMeshDemo from "../components/demo/piQiuModule/simulation/LoaderMesh";
 import LoaderSimulationResultDemo from "../components/demo/piQiuModule/simulation/LoaderSimulationResult";
 import LoaderSimulationFramesResultDemo from "../components/demo/piQiuModule/simulation/LoaderSimulationFramesResult";
@@ -14,7 +16,13 @@ interface CaseItem {
   desc: string;
   tags: string[];
   route: string;
-  loaderType: "geometry" | "mesh" | "simulation" | "simulationFrames";
+  loaderType:
+    | "geometry"
+    | "geometryOctree"
+    | "geometryBvh"
+    | "mesh"
+    | "simulation"
+    | "simulationFrames";
 }
 
 function LoaderSimulation() {
@@ -33,6 +41,22 @@ function LoaderSimulation() {
         tags: ["Geometry", "Render"],
         route: "/loaderGeometry",
         loaderType: "geometry",
+      },
+      geometryOctree: {
+        id: "geometryOctree",
+        title: t("gallery.cases.geometryOctree.title"),
+        desc: t("gallery.cases.geometryOctree.desc"),
+        tags: ["Geometry", "Octree", "Picker"],
+        route: "/loaderSimulation?case=geometryOctree",
+        loaderType: "geometryOctree",
+      },
+      geometryBvh: {
+        id: "geometryBvh",
+        title: t("gallery.cases.geometryBvh.title"),
+        desc: t("gallery.cases.geometryBvh.desc"),
+        tags: ["Geometry", "BVH", "Picker"],
+        route: "/loaderSimulation?case=geometryBvh",
+        loaderType: "geometryBvh",
       },
       mesh: {
         id: "mesh",
@@ -67,12 +91,24 @@ function LoaderSimulation() {
   const currentCase = cases[caseId] || cases["geometry"];
   const descKeyByLoaderType: Record<CaseItem["loaderType"], string> = {
     geometry: "loaderGeoModel.desc",
+    geometryOctree: "loaderGeoModel.desc",
+    geometryBvh: "loaderGeoModel.desc",
     mesh: "loaderMeshModel.desc",
     simulation: "loaderSimulationResultModel.desc",
     simulationFrames: "loaderSimulationFramesResultModel.desc",
   };
   const subDescKeysByLoaderType: Record<CaseItem["loaderType"], string[]> = {
     geometry: [
+      "loaderGeoModel.subdesc1",
+      "loaderGeoModel.subdesc2",
+      "loaderGeoModel.subdesc3",
+    ],
+    geometryOctree: [
+      "loaderGeoModel.subdesc1",
+      "loaderGeoModel.subdesc2",
+      "loaderGeoModel.subdesc3",
+    ],
+    geometryBvh: [
       "loaderGeoModel.subdesc1",
       "loaderGeoModel.subdesc2",
       "loaderGeoModel.subdesc3",
@@ -112,7 +148,13 @@ function LoaderSimulation() {
       <h2 className="basics-title">{currentCase.title}</h2>
 
       {/* 文件选择：支持 .gltf/.glb 本地文件，未选择时使用默认模型 */}
-      <div style={{ marginBottom: 12, width: "min(65vw, 100%)", marginInline: "auto" }}>
+      <div
+        style={{
+          marginBottom: 12,
+          width: "min(65vw, 100%)",
+          marginInline: "auto",
+        }}
+      >
         <div
           style={{
             display: "flex",
@@ -150,6 +192,12 @@ function LoaderSimulation() {
       {/* 根据 case 类型选择不同的 loader 组件 */}
       {currentCase.loaderType === "geometry" && (
         <LoaderGeometryDemo source={file} />
+      )}
+      {currentCase.loaderType === "geometryOctree" && (
+        <LoaderGeometryOctreeDemo source={file} />
+      )}
+      {currentCase.loaderType === "geometryBvh" && (
+        <LoaderGeometryBvhDemo source={file} />
       )}
       {currentCase.loaderType === "mesh" && <LoaderMeshDemo source={file} />}
       {currentCase.loaderType === "simulation" && (

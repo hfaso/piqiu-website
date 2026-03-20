@@ -291,6 +291,7 @@ export class Piqiu3DRenderer {
     if (!part) return false;
 
     part.visible = visible;
+    this.partSelector?.markDirty();
     this.model.update(true);
     this.requestRender();
     return true;
@@ -304,6 +305,7 @@ export class Piqiu3DRenderer {
     parts.forEach((part) => {
       part.visible = visible;
     });
+    this.partSelector?.markDirty();
     this.model.update(true);
     this.requestRender();
   }

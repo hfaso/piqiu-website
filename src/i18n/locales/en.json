@@ -63,6 +63,14 @@
         "title": "Geometry Rendering",
         "desc": "Examples of rendering geometry with optimized performance."
       },
+      "geometryOctree": {
+        "title": "Octree Picking",
+        "desc": "Efficient part selection using octree-based ray casting"
+      },
+      "geometryBvh": {
+        "title": "BVH Picking",
+        "desc": "Efficient part selection using BVH-based ray casting"
+      },
       "mesh": {
         "title": "Mesh Rendering",
         "desc": "Examples of rendering mesh with optimized performance."
