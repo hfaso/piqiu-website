@@ -59,6 +59,10 @@
         "title": "GLTF 模型加载",
         "desc": "支持 GLTF / GLB 模型解析与高效渲染"
       },
+      "pdb": {
+        "title": "PDB 分子加载",
+        "desc": "用于可视化 PDB 分子结构数据"
+      },
       "geometry": {
         "title": "几何体渲染",
         "desc": "几何体渲染示例"
@@ -102,6 +106,13 @@
     "title": "基础案例：加载gltf模型",
     "chooseLocal": "选择本地模型：",
     "desc": "这个案例展示了加载gltf模型功能。你可以通过鼠标进行交互：",
+    "chooseFile": "选择文件",
+    "noFileSelected": "未选择任何文件"
+  },
+  "loaderPdb": {
+    "title": "基础案例：加载 PDB 分子",
+    "chooseLocal": "选择本地模型：",
+    "desc": "这个案例展示了加载 PDB 分子数据并进行可视化。",
     "chooseFile": "选择文件",
     "noFileSelected": "未选择任何文件"
   },

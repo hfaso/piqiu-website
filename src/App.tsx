@@ -12,6 +12,7 @@ import LoaderSimulation from './pages/LoaderSimulation';
 const Home = lazy(() => import('./pages/Home'));
 const Basics = lazy(() => import('./pages/Basics'));
 const LoaderModel = lazy(() => import('./pages/LoaderModel'));
+const LoaderPdb = lazy(() => import('./pages/LoaderPdb'));
 const Gallery = lazy(() => import('./pages/Gallery'));
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/basics" element={<Basics />} />
             <Route path="/loaderModel" element={<LoaderModel />} />
+            <Route path="/loaderPdb" element={<LoaderPdb />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/loaderSimulation" element={<LoaderSimulation />} />
 

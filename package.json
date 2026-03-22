@@ -22,8 +22,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.6",
     "remark-gfm": "^4.0.1",
-    "yarn": "^1.22.22",
-    "piqiu3d": "git+ssh://git@github.com/hfaso/piqiu3d.git#v2.1.0"
+    "yarn": "^1.22.22"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

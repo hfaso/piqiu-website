@@ -59,6 +59,10 @@
         "title": "GLTF Model Loading",
         "desc": "Efficient parsing and rendering for GLTF / GLB models."
       },
+      "pdb": {
+        "title": "PDB Model Loading",
+        "desc": "Visualize molecular structures from PDB files."
+      },
       "geometry": {
         "title": "Geometry Rendering",
         "desc": "Examples of rendering geometry with optimized performance."
@@ -102,6 +106,13 @@
     "title": "Basic Demo: Load GLTF",
     "chooseLocal": "Choose a local model:",
     "desc": "This demo shows how to load a GLTF/GLB model. You can interact with the mouse:",
+    "chooseFile": "Choose file",
+    "noFileSelected": "No file selected"
+  },
+  "loaderPdb": {
+    "title": "Basic Demo: Load PDB",
+    "chooseLocal": "Choose a local model:",
+    "desc": "This demo shows how to load and visualize PDB molecular data.",
     "chooseFile": "Choose file",
     "noFileSelected": "No file selected"
   },

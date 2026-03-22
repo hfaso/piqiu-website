@@ -30,6 +30,13 @@ export default function Gallery() {
       route: "/loaderModel",
     },
     {
+      id: "pdb",
+      title: t("gallery.cases.pdb.title"),
+      desc: t("gallery.cases.pdb.desc"),
+      tags: ["PDB", "Loader"],
+      route: "/loaderPdb",
+    },
+    {
       id: "geometry",
       title: t("gallery.cases.geometry.title"),
       desc: t("gallery.cases.geometry.desc"),

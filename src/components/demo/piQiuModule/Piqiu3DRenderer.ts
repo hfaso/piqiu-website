@@ -174,10 +174,13 @@ export class Piqiu3DRenderer {
     this.canvas.oncontextmenu = (event) => {
       event.preventDefault();
     };
+
+    // 初始化选择器 - PDB 模型点击选择需要
+    this.initSelector();
   }
 
   /**
-   * 初始化选择器 - 添加 renderContext 参数
+   * 初始化选择器
    */
   initSelector(): void {
     this.partSelector = new PartSelector(
@@ -308,6 +311,14 @@ export class Piqiu3DRenderer {
     this.partSelector?.markDirty();
     this.model.update(true);
     this.requestRender();
+  }
+
+  /**
+   * 标记选择器缓存失效（模型变化时调用）
+   */
+  markSelectorDirty(): void {
+    this.partSelector?.markDirty();
+    console.log("PartSelector marked as dirty for PDB model");
   }
 
   /**
