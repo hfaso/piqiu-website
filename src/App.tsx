@@ -14,6 +14,7 @@ const Basics = lazy(() => import('./pages/Basics'));
 const LoaderModel = lazy(() => import('./pages/LoaderModel'));
 const LoaderPdb = lazy(() => import('./pages/LoaderPdb'));
 const Gallery = lazy(() => import('./pages/Gallery'));
+const WebGPU = lazy(() => import('./pages/WebGPU'));
 
 function App() {
   const { t } = useTranslation();
@@ -40,6 +41,7 @@ function App() {
             <Route path="/loaderPdb" element={<LoaderPdb />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/loaderSimulation" element={<LoaderSimulation />} />
+            <Route path="/webgpu" element={<WebGPU />} />
 
             {/* 兜底 */}
             <Route path="*" element={<div>{t('app.notFound')}</div>} />
